@@ -1,0 +1,30 @@
+{
+  "name": "hrsf82-thesis",
+  "version": "1.0.0",
+  "description": "Orders API for a Amazon-like application simulating fraud detection",
+  "main": "/server/index.js",
+  "engines": {
+    "node": ">=6.4.0"
+  },
+  "scripts": {
+    "start": "nodemon ./server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Oblako4/orders.git"
+  },
+  "author": "Tiffany Barth <tiffanyabarth@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Oblako4/orders/issues"
+  },
+  "homepage": "https://github.com/Oblako4/orders#readme",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "express": "^4.16.2",
+    "mysql": "^2.15.0"
+  },
+  "devDependencies": {
+    "faker": "^4.1.0"
+  }
+}

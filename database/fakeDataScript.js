@@ -7,8 +7,6 @@ var randomNumberGenerator = (min, max) => { //min and max inclusive
   return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive 
 }
 
-var date = moment().utc().format("YYYY-MM-DD HH:mm:ss");
-
 var createAddress = () => {
   var billing_address = {
     id: 1,
@@ -49,7 +47,7 @@ var createItem = (order_id) => {
 }
 
 var createItemArray = (order_id) => {
-  var quantity = randomNumberGenerator(1, 10);
+  var quantity = randomNumberGenerator(1, 5);
   var items = []
   for (var i = 0; i < quantity; i++) {
     items.push(createItem(order_id))
@@ -57,13 +55,19 @@ var createItemArray = (order_id) => {
   return items;
 }
 
+var calculateStdDevFromAOV = (AOV, stdDev, total_price) => { //may need a quick way to grab this data, cache?
+  var delta = Math.floor(total_price - AOV);
+  var std_dev_from_AOV = delta / stdDev; //need to round off to 5 decimals
+}
+// order.order.purchased_at = moment(faker.date.between('2017-07-25', '2017-10-25')).format("YYYY-MM-DD HH:mm:ss");
+
 var constructInFlightOrderData = (numRowsInOrderDB) => {
     var orderObj = {}
     var nextRow = numRowsInOrderDB++
     orderObj.order = {
       id: nextRow, //need to generate numbers sequentially
       user_id: nextRow, //might want to repeat these periodically
-      purchased_at: moment().utc().format("YYYY-MM-DD HH:mm:ss"), //might want to space them out
+      purchased_at: moment(faker.date.between('2017-07-25', '2017-10-25')).utc().format("YYYY-MM-DD HH:mm:ss"), //might want to space them out
       total_price: faker.commerce.price(.99, 2000, 2), //create distribution?
       card: {
         id: nextRow,
@@ -73,6 +77,7 @@ var constructInFlightOrderData = (numRowsInOrderDB) => {
     }
     orderObj.order.shipping_address = createShipping(orderObj.order.billing_address);
     orderObj.items = createItemArray(nextRow);
+    console.log(orderObj)
     return orderObj;
 }
 var generateMultipleOrder = (numOrders, numRowsInOrderDB) => {
@@ -82,6 +87,12 @@ var generateMultipleOrder = (numOrders, numRowsInOrderDB) => {
     i++
   }
 }
+
+var generateFraudScore = () => {
+  return randomNumberGenerator(0, 100);
+}
+
+
 
 generateMultipleOrder(2, 205);
 

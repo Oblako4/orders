@@ -19,8 +19,6 @@ CREATE TABLE user_order (
   id INTEGER NOT NULL AUTO_INCREMENT,
   order_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL,
-  user_email VARCHAR(50) NOT NULL,
-  user_phone VARCHAR(50) NOT NULL,
   billing_name VARCHAR(50) NOT NULL,
   billing_street VARCHAR(100) NOT NULL,
   billing_city VARCHAR(50) NOT NULL,
@@ -115,8 +113,8 @@ ALTER TABLE order_history ADD FOREIGN KEY (order_id) REFERENCES user_order (orde
 -- ---
 -- Test Data
 -- ---
-INSERT INTO user_order (order_id, user_id, user_email, user_phone, billing_name, billing_street, billing_city, billing_state, billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, total_price, card_num) 
-VALUES (1, 1, 'tiffanyabarth@gmail.com', '12199221966', 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', '01609-1234', 'USA', 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', 01609, 'USA', 331.99, 1234123412341234);
+INSERT INTO user_order (order_id, user_id, billing_name, billing_street, billing_city, billing_state, billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, total_price, card_num) 
+VALUES (1, 1, 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', '01609-1234', 'USA', 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', 01609, 'USA', 331.99, 1234123412341234);
 
 INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (1, 1, 3, 31.99);
 INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (1, 2, 2, 200.00);

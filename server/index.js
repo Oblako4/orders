@@ -15,6 +15,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.post('/order', (req, res) => {
+	var order_id = req.body.order.id;
+	var total_price = req.body.order.total_price;
+	var avg;
+	var std_dev;
 	return db.addNewOrder(req.body)
 		.then(result => {
 			// console.log('RESULT: ', result);
@@ -25,10 +29,24 @@ app.post('/order', (req, res) => {
 			)
 			.then((result) => {
 				// console.log('success w/ promise.all!')
+				
 				return db.addPurchaseDate(req.body.order)
 			})
 			.then(result => {
 				// console.log('successfully added purchase date!')
+				// res.sendStatus(200);
+				var year = req.body.order.purchased_at.slice(0, 4);
+				var month = req.body.order.purchased_at.slice(5, 7);
+				return db.getAOVandStdDev(year, month)
+			})
+			.then(AOVresult => {
+				console.log('aov result', AOVresult)
+				avg = AOVresult[0].avg;
+				std_dev = AOVresult[0].std_dev;
+				// res.send(AOVresult)
+				return db.addStandardDev(order_id, total_price, avg, std_dev);
+			})
+			.then(result => {
 				res.sendStatus(200);
 			})
 			.catch((error) => {

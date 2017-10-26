@@ -62,6 +62,11 @@ const addPurchaseDate = (orderObj) => {
   return connection.queryAsync(dateQuery);
 }
 
+const updateOrderHistory = (field, date, order_id) => {
+  var dateQuery = `UPDATE order_history SET ${field} = ${date} WHERE order_id = ${order_id}`;
+  return connection.queryAsync(dateQuery);
+}
+
 const addFraudScore = (analyticsObj) => {
   // console.log('fraud obj', analyticsObj);
   var fraudQuery = `UPDATE user_order SET fraud_score = ${analyticsObj.fraud_score} WHERE order_id = ${analyticsObj.order_id}`;
@@ -79,16 +84,18 @@ const addWholesaleTotal = (order_id, wholesale_total) => {
   return connection.queryAsync(orderQuery);
 }
 
-// var year = purchased_at.slice(0, 4);
-// var month = purchased_at.slice(5, 7);
 const getAOVandStdDev = (year, month) => {
   var lastYear = year - 1;
-  var aov_query = `SELECT aov, std_dev FROM average_order_value WHERE year = ${lastYear} AND month = ${month}`
+  var aov_query = `SELECT avg, std_dev FROM average_order_value WHERE year = ${lastYear} AND month = ${month}`
   return connection.queryAsync(aov_query);
 }
 
-const addStandardDev = (order_id, total_price, purchased_at) => {
-
+const addStandardDev = (order_id, total_price, avg, std_dev) => {
+  var delta = Math.floor(total_price - avg);
+  var std_dev_from_AOV = Math.round((delta * 100000)/ (std_dev * 100000) * 100000) / 100000; 
+  
+  var std_dev_query = `UPDATE user_order SET std_dev_from_aov = ${std_dev_from_AOV} WHERE order_id = ${order_id}`;
+  return connection.queryAsync(std_dev_query);
 } 
 
 
@@ -103,6 +110,8 @@ module.exports = {
   addPurchaseDate,
   addWholesaleTotal,
   getAOVandStdDev,
+  addStandardDev,
+  updateOrderHistory,
 }
 
 

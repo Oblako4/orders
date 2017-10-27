@@ -8,9 +8,9 @@ const mysqlConfig = {
   database: process.env.DBNAME || 'orders_API'
 };
 
-var connection = mysql.createConnection(mysqlConfig);
+var mysqlConnection = mysql.createConnection(mysqlConfig);
 
-connection.connect(function(err) {
+mysqlConnection.connect(function(err) {
 	if (err) {
 		console.log('Could not connect to database', err);
 	} else {
@@ -18,15 +18,13 @@ connection.connect(function(err) {
 	}
 })
 
-// var connection = Promise.promisifyAll(mysqlConnection);
-// console.log('connection', connection)
+var connection = Promise.promisifyAll(mysqlConnection);
 
 
 /*====================================================
 Input: An order object received from User Activity API.
 Output: 
 ====================================================*/
-
 const addNewOrder = (orderObj) => {
   var order_id = orderObj.order.id;
   var user_id = orderObj.order.user_id;
@@ -49,33 +47,56 @@ const addNewOrder = (orderObj) => {
   var orderValues = [order_id, user_id, billing_name, billing_street, billing_city, billing_state, billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, total_price, card_num];
   var userOrderQuery = 'INSERT INTO user_order (order_id, user_id, billing_name, billing_street, billing_city, billing_state, billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, total_price, card_num) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-  return new Promise(function(resolve, reject) {
-    connection.query(userOrderQuery, orderValues, function(err, results) { //use queryAsync instead!!
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    })
-  })
-  /*
-  will the date format be '2017-10-25 23:42:07'?
-  */
+  return connection.queryAsync(userOrderQuery, orderValues);
+}
+
+const addItem = (itemObj) => {
+  var itemValues = [itemObj.order_id, itemObj.id, itemObj.quantity, itemObj.listed_price];
+  var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (?, ?, ?, ?)';
+  return connection.queryAsync(itemQuery, itemValues);
+}
+
+const addPurchaseDate = (orderObj) => {
+  var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, \"${orderObj.purchased_at}\")`;
+  return connection.queryAsync(dateQuery);
+}
+
+const updateOrderHistory = (field, date, order_id) => {
+  var dateQuery = `UPDATE order_history SET ${field} = ${date} WHERE order_id = ${order_id}`;
+  return connection.queryAsync(dateQuery);
 }
 
 const addFraudScore = (analyticsObj) => {
-  console.log('fraud obj', analyticsObj);
-  res.send('ok')
-  // return new Promise(function(resolve, reject) {
-  //   connection.query(userOrderQuery, orderValues, function(err, results) { //use queryAsync instead!!
-  //     if (err) {
-  //       reject(err);
-  //     } else {
-  //       resolve(results);
-  //     }
-  //   })
-  // })
+  // console.log('fraud obj', analyticsObj);
+  var fraudQuery = `UPDATE user_order SET fraud_score = ${analyticsObj.fraud_score} WHERE order_id = ${analyticsObj.order_id}`;
+  return connection.queryAsync(fraudQuery);
 }
+
+
+const addInventoryDataToItem = (inventoryObj) => {
+  var itemQuery = `UPDATE item SET wholesale_price = ${inventoryObj.wholesale_price} WHERE order_id = ${inventoryObj.order_id} AND item_id = ${inventoryObj.id}`;
+  return connection.queryAsync(itemQuery);
+}
+
+const addWholesaleTotal = (order_id, wholesale_total) => {
+  var orderQuery = `UPDATE user_order SET wholesale_total = ${wholesale_total} WHERE order_id = ${order_id}`;
+  return connection.queryAsync(orderQuery);
+}
+
+const getAOVandStdDev = (year, month) => {
+  var lastYear = year - 1;
+  var aov_query = `SELECT avg, std_dev FROM average_order_value WHERE year = ${lastYear} AND month = ${month}`
+  return connection.queryAsync(aov_query);
+}
+
+const addStandardDev = (order_id, total_price, avg, std_dev) => {
+  var delta = Math.floor(total_price - avg);
+  var std_dev_from_AOV = Math.round((delta * 100000)/ (std_dev * 100000) * 100000) / 100000; 
+  
+  var std_dev_query = `UPDATE user_order SET std_dev_from_aov = ${std_dev_from_AOV} WHERE order_id = ${order_id}`;
+  return connection.queryAsync(std_dev_query);
+} 
+
 
 
 
@@ -83,6 +104,13 @@ const addFraudScore = (analyticsObj) => {
 module.exports = {
   addNewOrder,
   addFraudScore,
+  addItem,
+  addInventoryDataToItem,
+  addPurchaseDate,
+  addWholesaleTotal,
+  getAOVandStdDev,
+  addStandardDev,
+  updateOrderHistory,
 }
 
 

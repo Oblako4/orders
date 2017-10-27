@@ -113,28 +113,31 @@ ALTER TABLE order_history ADD FOREIGN KEY (order_id) REFERENCES user_order (orde
 -- ---
 -- Test Data
 -- ---
-INSERT INTO user_order (order_id, user_id, billing_name, billing_street, billing_city, billing_state, billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, total_price, card_num) 
-VALUES (1, 1, 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', '01609-1234', 'USA', 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', 01609, 'USA', 331.99, 1234123412341234);
+-- INSERT INTO user_order (order_id, user_id, billing_name, billing_street, billing_city, billing_state, billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, total_price, card_num) 
+-- VALUES (1, 1, 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', '01609-1234', 'USA', 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', 01609, 'USA', 331.99, 1234123412341234);
 
-INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (1, 1, 3, 31.99);
-INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (1, 2, 2, 200.00);
-INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (1, 3, 1, 100.00);
+-- INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (1, 1, 3, 31.99);
+-- INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (1, 2, 2, 200.00);
+-- INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (1, 3, 1, 100.00);
 
-INSERT INTO order_history (order_id, purchased_at) VALUES (1, '2017-10-25 23:42:07');
+-- INSERT INTO order_history (order_id, purchased_at) VALUES (1, '2017-10-25 23:42:07');
 
-INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (10, 2016, 300.00, 50.00);
+INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (7, 2016, 300.00, 100.00);
+INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (8, 2016, 200.00, 75.00);
+INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (9, 2016, 300.00, 120.00);
+INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (10, 2016, 400.00, 150.00);
 
-UPDATE item SET wholesale_price = 20.00 WHERE order_id = 1 AND item_id = 1;
-UPDATE item SET wholesale_price = 120.00 WHERE order_id = 1 AND item_id = 2;
-UPDATE item SET wholesale_price = 70.00 WHERE order_id = 1 AND item_id = 3;
+-- UPDATE item SET wholesale_price = 20.00 WHERE order_id = 1 AND item_id = 1;
+-- UPDATE item SET wholesale_price = 120.00 WHERE order_id = 1 AND item_id = 2;
+-- UPDATE item SET wholesale_price = 70.00 WHERE order_id = 1 AND item_id = 3;
 
-UPDATE user_order SET wholesale_total = 210.00 WHERE order_id = 1;
+-- UPDATE user_order SET wholesale_total = 210.00 WHERE order_id = 1;
 
-UPDATE user_order SET std_dev_from_aov = -0.6398 WHERE order_id = 1;
+-- UPDATE user_order SET std_dev_from_aov = -0.6398 WHERE order_id = 1;
 
-UPDATE user_order SET fraud_score = 23 WHERE order_id = 1;
+-- UPDATE user_order SET fraud_score = 23 WHERE order_id = 1;
 
-UPDATE order_history SET confirmed_at = '2017-10-25 23:53:07' WHERE order_id = 1;
-UPDATE order_history SET declined_at = '2017-10-25 23:53:07' WHERE order_id = 1;
-UPDATE order_history SET processed_at = '2017-10-26 1:55:07' WHERE order_id = 1;
-UPDATE order_history SET chargedback_at = '2017-10-30 3:15:33' WHERE order_id = 1;
+-- UPDATE order_history SET confirmed_at = '2017-10-25 23:53:07' WHERE order_id = 1;
+-- UPDATE order_history SET declined_at = '2017-10-25 23:53:07' WHERE order_id = 1;
+-- UPDATE order_history SET processed_at = '2017-10-26 1:55:07' WHERE order_id = 1;
+-- UPDATE order_history SET chargedback_at = '2017-10-30 3:15:33' WHERE order_id = 1;

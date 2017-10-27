@@ -25,7 +25,6 @@ var connection = Promise.promisifyAll(mysqlConnection);
 Input: An order object received from User Activity API.
 Output: 
 ====================================================*/
-
 const addNewOrder = (orderObj) => {
   var order_id = orderObj.order.id;
   var user_id = orderObj.order.user_id;

@@ -21,20 +21,15 @@ app.post('/order', (req, res) => {
 	var std_dev;
 	return db.addNewOrder(req.body)
 		.then(result => {
-			// console.log('RESULT: ', result);
 			return Promise.all(
 				req.body.items.map(function (itemObj) {
 					db.addItem(itemObj);
 				})
 			)
 			.then((result) => {
-				// console.log('success w/ promise.all!')
-				
 				return db.addPurchaseDate(req.body.order)
 			})
 			.then(result => {
-				// console.log('successfully added purchase date!')
-				// res.sendStatus(200);
 				var year = req.body.order.purchased_at.slice(0, 4);
 				var month = req.body.order.purchased_at.slice(5, 7);
 				return db.getAOVandStdDev(year, month)
@@ -43,7 +38,6 @@ app.post('/order', (req, res) => {
 				console.log('aov result', AOVresult)
 				avg = AOVresult[0].avg;
 				std_dev = AOVresult[0].std_dev;
-				// res.send(AOVresult)
 				return db.addStandardDev(order_id, total_price, avg, std_dev);
 			})
 			.then(result => {
@@ -86,7 +80,7 @@ app.post('/inventoryinfo', (req, res) => {
 })
 
 app.post('/fraudscore', (req, res) => {
-	return db.addFraudScore(req.body.order)
+	return db.addFraudScore(req.body)
 		.then(result => {
 			res.sendStatus(200);
 		})

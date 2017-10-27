@@ -2,6 +2,7 @@ const faker = require('faker');
 const moment = require('moment');
 const $ = require('jquery');
 const axios = require('axios');
+const Promise = require('bluebird');
 
 /*===========================================
 Input: A minimum and maximum integer
@@ -51,7 +52,7 @@ Output: A single item associated with the given order number
 ===========================================*/
 var createItem = (order_id) => {
   var item = {
-    id: randomNumberGenerator(1, 3000000000),
+    id: randomNumberGenerator(1, 3000000),
     order_id: order_id,
     quantity: randomNumberGenerator(1, 20),
     listed_price: faker.commerce.price(.99, 200, 2),
@@ -122,7 +123,7 @@ var generateItemArrayInventoryInfo = (item_array) => {
   for (var i = 0; i < item_array.length; i++) {
     inventoryInfoArray.push(generateItemInventoryInfo(item_array[i]))
   }
-  return inventoryInfoArray;
+  return {items: inventoryInfoArray};
 }
 
 var inventorydata = {items: generateItemArrayInventoryInfo(item_array)};
@@ -171,7 +172,7 @@ var constructInFlightOrderData = (numRowsInOrderDB) => {
       id: nextRow, //need to generate numbers sequentially
       user_id: nextRow, //might want to repeat these periodically
       purchased_at: moment(faker.date.between('2017-07-25', '2017-10-25')).utc().format("YYYY-MM-DD HH:mm:ss"),
-      total_price: faker.commerce.price(.99, 2000, 2), //create distribution?
+      total_price: faker.commerce.price(.99, 500, 2), //create distribution?
       card: {
         id: nextRow,
         num: faker.finance.account(16)
@@ -197,20 +198,52 @@ Output: Many in-flight order objects, number matches numOrders
 //   }
 // }
 
+var generateOrderRequest = (lastRowNum) => {
+  var i = lastRowNum + 1;
+  var orderObj = constructInFlightOrderData(i);
+  axios.post('http://127.0.0.1:3000/order', orderObj)
+    .then(res => {
+      
+      return generateItemArrayInventoryInfo(orderObj.items)
+    })
+    .then(items => {
+      // console.log(items);
+      return axios.post('http://127.0.0.1:3000/inventoryinfo', items) //it doesn't like something about this format
+    })
+    .then(res => {
+      // console.log('inventory info inserted');
+      return generateFraudScoreObj(i)
+    })
+    .then(scoreObj => {
+      // console.log('fraud score obj', scoreObj)
+      return axios.post('http://127.0.0.1:3000/fraudscore', scoreObj)
+    })
+    .then(res => {
+      console.log(i, ' inserted');
+    })
+    .catch(err => {
+      console.log("ERROR: ", err);
+    }) 
+  // while (i <= numOrders + numRowsInOrderDB) {
+  //   constructInFlightOrderData(i)
+  //   i++
+  // }
+}
+
 var generateMultipleOrders = (numOrders, numRowsInOrderDB) => {
-  var i = numRowsInOrderDB + 1;
-  while (i <= numOrders + numRowsInOrderDB) {
-    constructInFlightOrderData(i)
+  let i = numRowsInOrderDB;
+  while (i < numOrders + numRowsInOrderDB) {
+    generateOrderRequest(i)
     i++
   }
 }
 
 
-
 // console.log('fraud score', generateFraudScoreObj(12345))
 
 
-generateMultipleOrders(2, 205);
+// generateOrderRequest(1, 1);
+generateMultipleOrders(10000, 1000);
 
 
 

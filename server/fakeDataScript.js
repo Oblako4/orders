@@ -224,10 +224,7 @@ var generateOrderRequest = (lastRowNum) => {
     .catch(err => {
       console.log("ERROR: ", err);
     }) 
-  // while (i <= numOrders + numRowsInOrderDB) {
-  //   constructInFlightOrderData(i)
-  //   i++
-  // }
+
 }
 
 var generateMultipleOrders = (numOrders, numRowsInOrderDB) => {
@@ -243,7 +240,7 @@ var generateMultipleOrders = (numOrders, numRowsInOrderDB) => {
 
 
 // generateOrderRequest(1, 1);
-generateMultipleOrders(10000, 1000);
+generateMultipleOrders(2000, 4000);
 
 
 

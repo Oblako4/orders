@@ -35,7 +35,7 @@ app.post('/order', (req, res) => {
 				return db.getAOVandStdDev(year, month)
 			})
 			.then(AOVresult => {
-				console.log('aov result', AOVresult)
+				// console.log('aov result', AOVresult)
 				avg = AOVresult[0].avg;
 				std_dev = AOVresult[0].std_dev;
 				return db.addStandardDev(order_id, total_price, avg, std_dev);

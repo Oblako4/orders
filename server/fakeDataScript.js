@@ -52,7 +52,7 @@ Output: A single item associated with the given order number
 ===========================================*/
 var createItem = (order_id) => {
   var item = {
-    id: randomNumberGenerator(1, 3000000),
+    id: randomNumberGenerator(1, 300000),
     order_id: order_id,
     quantity: randomNumberGenerator(1, 20),
     listed_price: faker.commerce.price(.99, 200, 2),
@@ -77,7 +77,7 @@ var createItemArray = (order_id) => {
   return items;
 }
 
-var item_array = createItemArray(12345);
+// var item_array = createItemArray(12345);
 // console.log('item array!', item_array);
 
 
@@ -126,7 +126,7 @@ var generateItemArrayInventoryInfo = (item_array) => {
   return {items: inventoryInfoArray};
 }
 
-var inventorydata = {items: generateItemArrayInventoryInfo(item_array)};
+// var inventorydata = {items: generateItemArrayInventoryInfo(item_array)};
 // console.log('inventory data!', inventorydata);
 
 /*===========================================
@@ -199,23 +199,20 @@ Output: Many in-flight order objects, number matches numOrders
 // }
 
 var generateOrderRequest = (lastRowNum) => {
+  
   var i = lastRowNum + 1;
   var orderObj = constructInFlightOrderData(i);
   axios.post('http://127.0.0.1:3000/order', orderObj)
     .then(res => {
-      
       return generateItemArrayInventoryInfo(orderObj.items)
     })
     .then(items => {
-      // console.log(items);
       return axios.post('http://127.0.0.1:3000/inventoryinfo', items) //it doesn't like something about this format
     })
     .then(res => {
-      // console.log('inventory info inserted');
       return generateFraudScoreObj(i)
     })
     .then(scoreObj => {
-      // console.log('fraud score obj', scoreObj)
       return axios.post('http://127.0.0.1:3000/fraudscore', scoreObj)
     })
     .then(res => {
@@ -240,7 +237,7 @@ var generateMultipleOrders = (numOrders, numRowsInOrderDB) => {
 
 
 // generateOrderRequest(1, 1);
-generateMultipleOrders(2000, 4000);
+generateMultipleOrders(2000, 22755);
 
 
 

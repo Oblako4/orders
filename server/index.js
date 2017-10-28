@@ -1,5 +1,6 @@
-const express = require('express');
 const bodyParser = require('body-parser');
+const elasticsearch = require('elasticsearch');
+const express = require('express');
 const Promise = require('bluebird');
 
 const db = require('../database/index.js')
@@ -7,12 +8,36 @@ const db = require('../database/index.js')
 const app = express()
 const PORT = process.env.PORT || 3000;
 
+//Elastic Search==========================
+var client = new elasticsearch.Client({
+	host: 'localhost:9200',
+	log: 'trace'
+});
+
+
+
+//Routes==================================
 app.listen(PORT, () => {
 	console.log(`listening on port ${PORT}`);
 })
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
+
+app.get('/order', (req, res) => {
+	if (req.query.gte && req.query.lte) { //add more validation for date format?
+		return db.getOrdersBetweenDates(req.query.gte, req.query.lte).
+			then(results => {
+				res.send(results);
+			})
+			.catch(err => {
+				console.log('ERROR in GET /order', err);
+				res.sendStatus(500);
+			})
+	} else {
+		res.sendStatus(500);
+	}
+})
 
 app.post('/order', (req, res) => {
 	var order_id = req.body.order.id;

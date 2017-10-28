@@ -72,7 +72,6 @@ const addFraudScore = (analyticsObj) => {
   return connection.queryAsync(fraudQuery);
 }
 
-
 const addInventoryDataToItem = (inventoryObj) => {
   var itemQuery = `UPDATE item SET wholesale_price = ${inventoryObj.wholesale_price} WHERE order_id = ${inventoryObj.order_id} AND item_id = ${inventoryObj.id}`;
   return connection.queryAsync(itemQuery);
@@ -85,7 +84,7 @@ const addWholesaleTotal = (order_id, wholesale_total) => {
 
 const getAOVandStdDev = (year, month) => {
   var lastYear = year - 1;
-  var aov_query = `SELECT avg, std_dev FROM average_order_value WHERE year = ${lastYear} AND month = ${month}`
+  var aov_query = `SELECT avg, std_dev FROM average_order_value WHERE year = ${lastYear} AND month = ${month}`;
   return connection.queryAsync(aov_query);
 }
 
@@ -97,8 +96,25 @@ const addStandardDev = (order_id, total_price, avg, std_dev) => {
   return connection.queryAsync(std_dev_query);
 } 
 
+const getOrderByOrderId = (order_id) => {
+  var orderQuery = `SELECT * FROM user_order WHERE order_id = ${order_id}`;
+  return connection.queryAsync(orderQuery);
+}
 
+const getOrdersBetweenDates = (startDate, endDate) => {
+  var orderQuery = `SELECT * FROM user_order WHERE order_id IN (SELECT order_id FROM order_history WHERE purchased_at >= "${startDate}" and purchased_at <= "${endDate}")`;
+  return connection.queryAsync(orderQuery);
+}
 
+const getOrdersWithFraudScoresAbove = (fraud_score) => {
+  var orderQuery = `SELECT * FROM user_order WHERE fraud_score > ${fraud_score}`;
+  return connection.queryAsync(orderQuery);
+}
+
+const getChargeBacksBetweenDates = (startDate, endDate) => {
+  var orderQuery = `SELECT * FROM user_order WHERE order_id IN (SELECT order_id FROM order_history WHERE chargedback_at >= "${startDate}" and chargedback_at <= "${endDate}")`;
+  return connection.queryAsync(orderQuery);
+}
 
 
 module.exports = {
@@ -111,6 +127,10 @@ module.exports = {
   getAOVandStdDev,
   addStandardDev,
   updateOrderHistory,
+  getOrdersBetweenDates,
+  getOrdersWithFraudScoresAbove,
+  getChargeBacksBetweenDates,
+  getOrderByOrderId,
 }
 
 

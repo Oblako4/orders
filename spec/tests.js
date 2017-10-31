@@ -2,17 +2,19 @@
  * for these tests to pass. */
 
 var mysql = require('mysql');
-var request = require('request'); // You might need to npm install the request module!
+var request = require('request'); 
 var expect = require('chai').expect;
+// const connection = require('../database/test.js').connection;
 
-describe('Persistent Node Chat Server', function() {
-  var dbConnection;
+
+describe('Order Table Test', function() {
+  // var dbConnection;
 
   beforeEach(function(done) {
     dbConnection = mysql.createConnection({
       user: 'root',
       password: '',
-      database: 'orders_API'
+      database: 'orders_API_test'
     });
     dbConnection.connect();
 
@@ -37,7 +39,7 @@ describe('Persistent Node Chat Server', function() {
       // Post a message to the node chat server:
       request({
         method: 'POST',
-        uri: 'http://127.0.0.1:3000/classes/messages',
+        uri: 'http://127.0.0.1:3000/orders',
         json: {
           username: 'Valjean',
           message: 'In mercy\'s name, three days is all I need.',

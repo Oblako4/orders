@@ -101,6 +101,18 @@ const getOrderByOrderId = (order_id) => {
   return connection.queryAsync(orderQuery);
 }
 
+const constructObjToAnalytics = (order_id) => {
+  let orderObj = {};
+  var orderQuery = `SELECT * FROM user_order, item, order_history WHERE item.order_id = ${order_id} AND user_order.order_id = ${order_id} AND order_history.order_id = ${order_id}`;
+  return connection.queryAsync(orderQuery);
+}
+
+const constObjToInventory = (order_id) => {
+  let itemObj = {};
+  var itemQuery = `SELECT * FROM item WHERE order_id = ${order_id}`;
+  return connection.queryAsync(itemQuery);
+}
+
 const getOrdersBetweenDates = (startDate, endDate) => {
   var orderQuery = `SELECT * FROM user_order WHERE order_id IN (SELECT order_id FROM order_history WHERE purchased_at >= "${startDate}" and purchased_at <= "${endDate}")`;
   return connection.queryAsync(orderQuery);
@@ -132,6 +144,8 @@ module.exports = {
   getOrdersWithFraudScoresAbove,
   getChargeBacksBetweenDates,
   getOrderByOrderId,
+  constructObjToAnalytics,
+  constObjToInventory,
 }
 
 

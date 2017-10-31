@@ -10,10 +10,10 @@ const app = express()
 const PORT = process.env.PORT || 3000;
 
 //Elastic Search==========================
-var client = new elasticsearch.Client({
-	host: 'localhost:9200',
-	log: 'trace'
-});
+// var client = new elasticsearch.Client({
+// 	host: 'localhost:9200',
+// 	log: 'trace'
+// });
 
 
 
@@ -39,6 +39,55 @@ app.get('/order', (req, res) => {
 		res.sendStatus(500);
 	}
 })
+
+
+
+app.get('/orderinfo/:order_id', (req, res) => {
+	//construct outbound object
+  let objToAnalytics = {}
+  console.log('params ', req.params)
+	return db.constructObjToAnalytics(req.params.order_id)
+	.then(result => {
+    // console.log('result: ', result);
+    
+    var firstItem = result[0];
+    objToAnalytics.order = {
+      order_id: firstItem.order_id,
+      user_id: firstItem.user_id,
+      billing_state: firstItem.billing_state,
+      billing_ZIP: firstItem.billing_ZIP,
+      billing_country: firstItem.billing_country,
+      shipping_state: firstItem.shipping_state,
+      shipping_ZIP: firstItem.shipping_ZIP,
+      shipping_country: firstItem.shipping_country,
+      total_price: firstItem.total_price,
+      purchased_At: firstItem.purchased_At,
+      std_dev_from_aov: firstItem. std_dev_from_aov,
+    }
+    objToAnalytics.items = [];
+    result.forEach(function(item) {
+      var itemObj = {
+        item_id: item.item_id,
+        quantity: item.quantity,
+        seller_id: item.seller_id,
+      }
+      objToAnalytics.items.push(itemObj)
+    })
+    res.send(objToAnalytics);
+  })
+  .catch(error => {
+    res.sendStatus(500);
+  })
+})
+
+app.get('/qtycheck/:order_id', (req, res) => {
+  return db.constObjToInventory
+})
+
+app.get('/qtyupdate/:order_id', (req, res) => {
+
+})
+
 
 app.post('/order', (req, res) => {
 	var order_id = req.body.order.id;

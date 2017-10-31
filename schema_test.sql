@@ -9,9 +9,9 @@
 -- Table 'order'
 -- 
 -- ---
-DROP DATABASE IF EXISTS orders_API;
-CREATE DATABASE orders_API;
-USE orders_API;
+DROP DATABASE IF EXISTS orders_API_test;
+CREATE DATABASE orders_API_test;
+USE orders_API_test;
 
 DROP TABLE IF EXISTS user_order;
     

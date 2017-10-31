@@ -5,7 +5,7 @@ const mysqlConfig = {
   host: process.env.DBSERVER || 'localhost',
   user: process.env.DBUSER || 'root',
   password: process.env.DBPASSWORD || '',
-  database: process.env.DBNAME || 'orders_API'
+  database: process.env.DBNAME || 'orders_API_test'
 };
 
 var mysqlConnection = mysql.createConnection(mysqlConfig);

@@ -1,8 +1,10 @@
 const faker = require('faker');
 const moment = require('moment');
-const $ = require('jquery');
 const axios = require('axios');
 const Promise = require('bluebird');
+const cron = require('node-cron');
+
+// const db = require('../database/index.js')
 
 /*===========================================
 Input: A minimum and maximum integer
@@ -52,9 +54,9 @@ Output: A single item associated with the given order number
 ===========================================*/
 var createItem = (order_id) => {
   var item = {
-    id: randomNumberGenerator(1, 3000000),
+    id: randomNumberGenerator(1, 300000),
     order_id: order_id,
-    quantity: randomNumberGenerator(1, 20),
+    quantity: randomNumberGenerator(1, 4),
     listed_price: faker.commerce.price(.99, 200, 2),
   }
   return item;
@@ -77,12 +79,12 @@ var createItemArray = (order_id) => {
   return items;
 }
 
-var item_array = createItemArray(12345);
+// var item_array = createItemArray(12345);
 // console.log('item array!', item_array);
 
 
 /*===========================================
-Input: Order id number
+Input: Item object
 Output: See structure below: 
   { 
     id: 90,
@@ -95,6 +97,7 @@ Function: Simulates the response typically received from Inventory for a single 
 var generateItemInventoryInfo = (item) => {
   var inventoryInfo = {};
   inventoryInfo.id = item.id;
+  inventoryInfo.seller_id = 1;
   inventoryInfo.order_id = item.order_id;
   inventoryInfo.quantity = randomNumberGenerator(15, 1000);
   inventoryInfo.wholesale_price = Math.round((item.listed_price * (randomNumberGenerator(50, 99) / 100)) * 100) / 100;
@@ -126,7 +129,7 @@ var generateItemArrayInventoryInfo = (item_array) => {
   return {items: inventoryInfoArray};
 }
 
-var inventorydata = {items: generateItemArrayInventoryInfo(item_array)};
+// var inventorydata = {items: generateItemArrayInventoryInfo(item_array)};
 // console.log('inventory data!', inventorydata);
 
 /*===========================================
@@ -185,41 +188,25 @@ var constructInFlightOrderData = (numRowsInOrderDB) => {
     return orderObj;
 }
 
-/*===========================================
-Input:  numOrders = number of orders to generate
-        numRowsInOrderDB = last order id generated (to ensure no duplicates)
-Output: Many in-flight order objects, number matches numOrders 
-===========================================*/
-// var generateMultipleOrders = (numOrders, numRowsInOrderDB) => {
-//   var i = numRowsInOrderDB + 1;
-//   while (i <= numOrders + numRowsInOrderDB) {
-//     constructInFlightOrderData(i)
-//     i++
-//   }
-// }
-
-var generateOrderRequest = (lastRowNum) => {
+var generateOrderRequest = (lastRowNum) => { //this can be done without http calls
+  
   var i = lastRowNum + 1;
   var orderObj = constructInFlightOrderData(i);
   axios.post('http://127.0.0.1:3000/order', orderObj)
     .then(res => {
-      
       return generateItemArrayInventoryInfo(orderObj.items)
     })
     .then(items => {
-      // console.log(items);
       return axios.post('http://127.0.0.1:3000/inventoryinfo', items) //it doesn't like something about this format
     })
     .then(res => {
-      // console.log('inventory info inserted');
       return generateFraudScoreObj(i)
     })
     .then(scoreObj => {
-      // console.log('fraud score obj', scoreObj)
       return axios.post('http://127.0.0.1:3000/fraudscore', scoreObj)
     })
     .then(res => {
-      console.log(i, ' inserted');
+      console.log(i, " inserted");
     })
     .catch(err => {
       console.log("ERROR: ", err);
@@ -227,7 +214,88 @@ var generateOrderRequest = (lastRowNum) => {
 
 }
 
+var generateOrdersWithoutRequests = (lastRowNum) => {
+  var i = lastRowNum + 1;
+  var orderObj = constructInFlightOrderData(i);
+  var order_id = orderObj.order.id;
+  var total_price = orderObj.order.total_price;
+  var wholesale_total = 0;
+  var avg;
+  var std_dev;
+  return db.addNewOrder(orderObj)
+  .then(result => {
+    return Promise.all(
+      orderObj.items.map(function (itemObj) {
+        db.addItem(itemObj);
+      })
+    )
+    .then((result) => {
+      return db.addPurchaseDate(orderObj.order)
+    })
+    .then(result => {
+      var year = orderObj.order.purchased_at.slice(0, 4);
+      var month = orderObj.order.purchased_at.slice(5, 7);
+      return db.getAOVandStdDev(year, month)
+    })
+    .then(AOVresult => {
+      avg = AOVresult[0].avg;
+      std_dev = AOVresult[0].std_dev;
+      return db.addStandardDev(order_id, total_price, avg, std_dev);
+    })
+    .then(result => {
+      return generateFraudScoreObj(i);
+    })
+    .then(scoreObj => {
+      return db.addFraudScore(scoreObj);
+    })
+    .then(result => {
+      return generateItemArrayInventoryInfo(orderObj.items)
+    })
+    .then(inventoryObj => {
+      // res.sendStatus(200);
+      // console.log(i, ' inserted');
+      return Promise.all(
+        inventoryObj.items.map(function(itemObj) {
+          wholesale_total += itemObj.wholesale_price;
+          db.addInventoryDataToItem(itemObj)
+        })
+      )
+    })
+    .then(result => {
+      return db.addWholesaleTotal(order_id, wholesale_total)
+    })
+    .then(result => {
+      // console.log('added inventory data successfully!', wholesale_total)
+      // console.log(i, " inserted");
+      // res.sendStatus(200);
+    })      
+    .catch((error) => {
+      console.log(`ERROR w/ ${i} order `, error);
+      // res.sendStatus(500);
+    })
+  })
+  .catch(error => {
+    console.log(`ERROR w/ ${i} order `, error);
+    // res.sendStatus(500);
+  })
+
+}
+/*===========================================
+Input:  numOrders = number of orders to generate
+        numRowsInOrderDB = last order id generated (to ensure no duplicates)
+Output: Many in-flight order objects, number matches numOrders 
+===========================================*/
 var generateMultipleOrders = (numOrders, numRowsInOrderDB) => {
+  let i = numRowsInOrderDB;
+  while (i < numOrders + numRowsInOrderDB) {
+    generateOrderRequest(i)
+    i++
+  }
+  // console.log(`inserted ${numOrders} rows`);
+}
+
+
+var generateMultipleOrdersWithoutRequest = (numOrders, numRowsInOrderDB) => {
   let i = numRowsInOrderDB;
   while (i < numOrders + numRowsInOrderDB) {
     generateOrderRequest(i)
@@ -235,12 +303,21 @@ var generateMultipleOrders = (numOrders, numRowsInOrderDB) => {
   }
 }
 
-
+var numOrders = 100;
+var numRowsInOrderDB = 37598;
+var j = 1;
+var task = cron.schedule('0-59 * * * * *', function() {
+  console.log(`ran task ${j++}`);
+  generateMultipleOrders(numOrders, numRowsInOrderDB);
+  numRowsInOrderDB+=numOrders
+})
+task.start();
 // console.log('fraud score', generateFraudScoreObj(12345))
-
+//26765
 
 // generateOrderRequest(1, 1);
-generateMultipleOrders(2000, 4000);
-
+// generateMultipleOrders(1, 24758);
+// generateOrdersWithoutRequests(24760);
+// generateMultipleOrdersWithoutRequest(2000, 26765);
 
 

@@ -80,12 +80,45 @@ app.get('/orderinfo/:order_id', (req, res) => {
   })
 })
 
+
 app.get('/qtycheck/:order_id', (req, res) => {
-  return db.constObjToInventory
+  let qtyCheckObj = {}
+  qtyCheckObj.order_id = req.params.order_id
+  return db.constObjToInventory(req.params.order_id)
+  .then(result => {
+    qtyCheckObj.items = []
+    result.forEach(function(item) {
+      var itemObj = {
+        item_id: item.item_id,
+        seller_id: item.seller_id
+      }
+      qtyCheckObj.items.push(itemObj)
+    })
+    res.send(qtyCheckObj);
+  })
+  .catch(error => {
+    res.sendStatus(500);
+  })
 })
 
 app.get('/qtyupdate/:order_id', (req, res) => {
-
+  let qtyUpdateObj = {};
+  return db.constObjToInventory(req.params.order_id)
+  .then(result => {
+    qtyUpdateObj.items = []
+    result.forEach(function(item) {
+      var itemObj = {
+        item_id: item.item_id,
+        quantity: item.quantity,
+        seller_id: item.seller_id
+      }
+      qtyUpdateObj.items.push(itemObj);
+    })
+    res.send(qtyUpdateObj);
+  })
+  .catch(error => {
+    res.sendStatus(500);
+  })
 })
 
 

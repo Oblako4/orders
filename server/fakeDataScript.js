@@ -154,9 +154,9 @@ Output: A randomly generated fraud score (~95% of scores under 10, 5% between 50
 var generateFraudScoreObj = (order_id) => {
   var randomNumber = randomNumberGenerator(0, 100);
   if (randomNumber >= 95) {
-    return {order_id: order_id, fraud_score: randomNumberGenerator(50, 100)};
+    return {order: {order_id: order_id, fraud_score: randomNumberGenerator(50, 100)}}; //THIS HAS BEEN CHANGED
   } else {
-    return {order_id: order_id, fraud_score: randomNumberGenerator(1, 10)};
+    return {order: {order_id: order_id, fraud_score: randomNumberGenerator(1, 10)}}; //THIS HAS BEEN CHANGED
   }
 }
 
@@ -183,7 +183,7 @@ var constructInFlightOrderData = (numRowsInOrderDB) => {
       billing_address: createAddress(),
     }
     orderObj.order.shipping_address = createShipping(orderObj.order.billing_address);
-    orderObj.items = createItemArray(nextRow);
+    orderObj.order.items = createItemArray(nextRow);
     // console.log(orderObj)
     return orderObj;
 }

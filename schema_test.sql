@@ -127,7 +127,7 @@ INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (7, 2016, 300
 INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (8, 2016, 200.00, 75.00);
 INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (9, 2016, 300.00, 120.00);
 INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (10, 2016, 400.00, 150.00);
-
+INSERT INTO average_order_value (month, year, avg, std_dev) VALUES (11, 2016, 420.00, 150.00);
 -- UPDATE item SET wholesale_price = 20.00 WHERE order_id = 1 AND item_id = 1;
 -- UPDATE item SET wholesale_price = 120.00 WHERE order_id = 1 AND item_id = 2;
 -- UPDATE item SET wholesale_price = 70.00 WHERE order_id = 1 AND item_id = 3;

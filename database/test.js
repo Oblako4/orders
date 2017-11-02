@@ -1,5 +1,6 @@
 const mysql = require('mysql');
 const Promise = require('bluebird');
+const moment = require('moment');
 
 const mysqlConfig = {
   host: process.env.DBSERVER || 'localhost',
@@ -20,6 +21,10 @@ mysqlConnection.connect(function(err) {
 
 var connection = Promise.promisifyAll(mysqlConnection);
 
+/*====================================================
+TO CLEAR TEST DATABASE: 
+Run: mysql -u root -p < schema_test.sql
+====================================================*/
 
 /*====================================================
 Input: An order object received from User Activity API.
@@ -51,13 +56,16 @@ const addNewOrder = (orderObj) => {
 }
 
 const addItem = (itemObj) => {
-  var itemValues = [itemObj.order_id, itemObj.id, itemObj.quantity, itemObj.listed_price];
-  var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (?, ?, ?, ?)';
+  var itemValues = [itemObj.order_id, itemObj.id, itemObj.quantity, itemObj.listed_price, itemObj.seller_id];
+  // var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (?, ?, ?, ?)';
+  var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price, seller_id) VALUES (?, ?, ?, ?, ?)';
   return connection.queryAsync(itemQuery, itemValues);
 }
 
 const addPurchaseDate = (orderObj) => {
-  var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, \"${orderObj.purchased_at}\")`;
+  var purchased_at = moment(orderObj.purchased_at).format("YYYY-MM-DD HH:mm:ss");
+  // var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, \"${orderObj.purchased_at}\")`;
+  var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, "${purchased_at}")`
   return connection.queryAsync(dateQuery);
 }
 
@@ -68,7 +76,8 @@ const updateOrderHistory = (field, date, order_id) => {
 
 const addFraudScore = (analyticsObj) => {
   // console.log('fraud obj', analyticsObj);
-  var fraudQuery = `UPDATE user_order SET fraud_score = ${analyticsObj.fraud_score} WHERE order_id = ${analyticsObj.order_id}`;
+  // var fraudQuery = `UPDATE user_order SET fraud_score = ${analyticsObj.fraud_score} WHERE order_id = ${analyticsObj.order_id}`;
+  var fraudQuery = `UPDATE user_order SET fraud_score = ${analyticsObj.order.fraud_score} WHERE order_id = ${analyticsObj.order.order_id}`;
   return connection.queryAsync(fraudQuery);
 }
 
@@ -99,6 +108,18 @@ const addStandardDev = (order_id, total_price, avg, std_dev) => {
 const getOrderByOrderId = (order_id) => {
   var orderQuery = `SELECT * FROM user_order WHERE order_id = ${order_id}`;
   return connection.queryAsync(orderQuery);
+}
+
+const constructObjToAnalytics = (order_id) => {
+  let orderObj = {};
+  var orderQuery = `SELECT * FROM user_order, item, order_history WHERE item.order_id = ${order_id} AND user_order.order_id = ${order_id} AND order_history.order_id = ${order_id}`;
+  return connection.queryAsync(orderQuery);
+}
+
+const constObjToInventory = (order_id) => {
+  let itemObj = {};
+  var itemQuery = `SELECT * FROM item WHERE order_id = ${order_id}`;
+  return connection.queryAsync(itemQuery);
 }
 
 const getOrdersBetweenDates = (startDate, endDate) => {
@@ -132,7 +153,10 @@ module.exports = {
   getOrdersWithFraudScoresAbove,
   getChargeBacksBetweenDates,
   getOrderByOrderId,
+  constructObjToAnalytics,
+  constObjToInventory,
 }
+
 
 
 

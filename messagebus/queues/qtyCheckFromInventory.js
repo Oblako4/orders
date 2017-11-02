@@ -13,27 +13,28 @@ var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 const qtycheck = Consumer.create({
   queueUrl: url.qtycheck,
   handleMessage: (message, done) => {
-  	console.log('message: ', message)
-    // var order_id;
-    // var wholesale_total = 0;
-    // return Promise.all(
-    //   message.Body.items.map(function(itemObj) {
-    //     order_id = itemObj.order_id;
-    //     wholesale_total += itemObj.wholesale_price;
-    //     return db.addInventoryDataToItem(itemObj)
-    //   })
-    // )
-    // .then(result => {
-    //   return db.addWholesaleTotal(order_id, wholesale_total)
-    // })
-    // .then(result => {
-    //   console.log("SUCCESSFULLY RECEIVED QTY CHECK FROM INVENTORY")
-    //   done();
-    // })
-    // .catch(err => {
-    //   console.log("ERROR: ", err);
-    // })
-    done();
+  	console.log('message: ', message.Body)
+    var order_id;
+    var wholesale_total = 0;
+    var items = JSON.parse(message.Body)
+    return Promise.all(
+      items.map(function(itemObj) {
+        order_id = itemObj.order_id;
+        wholesale_total += itemObj.wholesale_price;
+        return db.addInventoryDataToItem(itemObj)
+      })
+    )
+    .then(result => {
+      return db.addWholesaleTotal(order_id, wholesale_total)
+    })
+    .then(result => {
+      console.log("SUCCESSFULLY RECEIVED QTY CHECK FROM INVENTORY")
+      done();
+    })
+    .catch(err => {
+      console.log("ERROR: ", err);
+    })
+    // done();
   },
   sqs: sqs
 })

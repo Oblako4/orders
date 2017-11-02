@@ -56,8 +56,9 @@ const addNewOrder = (orderObj) => {
 }
 
 const addItem = (itemObj) => {
-  var itemValues = [itemObj.order_id, itemObj.id, itemObj.quantity, itemObj.listed_price];
-  var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (?, ?, ?, ?)';
+  var itemValues = [itemObj.order_id, itemObj.id, itemObj.quantity, itemObj.listed_price, itemObj.seller_id];
+  // var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (?, ?, ?, ?)';
+  var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price, seller_id) VALUES (?, ?, ?, ?, ?)';
   return connection.queryAsync(itemQuery, itemValues);
 }
 
@@ -75,7 +76,8 @@ const updateOrderHistory = (field, date, order_id) => {
 
 const addFraudScore = (analyticsObj) => {
   // console.log('fraud obj', analyticsObj);
-  var fraudQuery = `UPDATE user_order SET fraud_score = ${analyticsObj.fraud_score} WHERE order_id = ${analyticsObj.order_id}`;
+  // var fraudQuery = `UPDATE user_order SET fraud_score = ${analyticsObj.fraud_score} WHERE order_id = ${analyticsObj.order_id}`;
+  var fraudQuery = `UPDATE user_order SET fraud_score = ${analyticsObj.order.fraud_score} WHERE order_id = ${analyticsObj.order.order_id}`;
   return connection.queryAsync(fraudQuery);
 }
 

@@ -3,131 +3,140 @@ const axios = require('axios');
 const Consumer = require('sqs-consumer');
 
 // const db = require('../database/index.js');
-const db = require('../database/index.js') //TEST DATABASE
+// const db = require('../database/index.js') //PRODUCTION DATABASE
+const db = require('../database/test.js')  //TEST DATABASE
 const url = require('./config/config.js');
 
+// const queues = require('./queues') //uncomment when all are running
 const ordersFromUsers = require('./queues/ordersFromUsers.js')
+const fraudScoresFromAnalytics = require('./queues/fraudScoresFromAnalytics.js')
+const qtyCheckFromInventory = require('./queues/qtyCheckFromInventory.js')
 
 // AWS.config.loadFromPath(__dirname + '/config/config.json'); //for sending to my own queue
-// AWS.config.loadFromPath(__dirname + '/config/useractivity/config.json'); //for interacting w/ USER ACTIVITY
-// AWS.config.setPromisesDependency(require('bluebird'));
-// var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
-
-
-// const app = Consumer.create({
-//   queueUrl: url.qtycheck,
-//   handleMessage: (message, done) => {
-//   	console.log('message: ', message)
-//   	//validate data
-//   	//if correct, add to database
-//     done();
-//   },
-//   sqs: sqs
-// })
-
-// app.on('error', (err) => {
-// 	console.log(err.message);
-// 	done(err); //can i keep this here?
-// })
-
-// app.start()
-/*==========================================
-RECEIVE ORDERS VIA SQS
-==========================================*/
-// const userorders = Consumer.create({
-//   queueUrl: url.userorders,
-//   handleMessage: (message, done) => {
-//   	console.log('message: ', message)
-//   	return axios.post('http://127.0.0.1:3000/order', JSON.parse(message.Body))
-//   	.then(result => {
-//   		console.log("SUCCESS")
-//   		done();
-//   	})
-//   	.catch(err => {
-//   		console.log("ERROR: ", err);
-//   	})
-//     // done();
-//   },
-//   sqs: sqs
-// })
-
-// userorders.on('error', (err) => {
-// 	console.log(err.message);
-// 	// done(err); //can i keep this here?
-// })
-
-// userorders.start()
+// AWS.config.loadFromPath(__dirname + '/config/useractivity/config.json'); //for sending to useractivity?
+AWS.config.loadFromPath(__dirname + '/config/analytics/config.json'); //for sending to analytics?
+AWS.config.setPromisesDependency(require('bluebird'));
+var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 
 /*=================================
 EXAMPLE SEND MESSAGE TO ANALYTICS
 =================================*/
-// var orderObj = {order_id: 12341234, items: [{item_id: 123456789012, seller_id: 120}, {item_id: 123456789011, seller_id: 134}]}
-var createOrderObjToAnalytics = function() {
-	let objToAnalytics = {}
-  return db.constructObjToAnalytics(3)
-    .then(result => {
+// var createOrderObjToAnalytics = function(order_id) {
+// 	let objToAnalytics = {}
+//   return db.constructObjToAnalytics(order_id)
+//     .then(result => {
+//       var firstItem = result[0];
+//       objToAnalytics.order = {
+//         order_id: firstItem.order_id,
+//         user_id: firstItem.user_id,
+//         billing_state: firstItem.billing_state,
+//         billing_ZIP: firstItem.billing_ZIP,
+//         billing_country: firstItem.billing_country,
+//         shipping_state: firstItem.shipping_state,
+//         shipping_ZIP: firstItem.shipping_ZIP,
+//         shipping_country: firstItem.shipping_country,
+//         total_price: firstItem.total_price,
+//         purchased_At: firstItem.purchased_At,
+//         std_dev_from_aov: firstItem. std_dev_from_aov,
+//       }
+//       objToAnalytics.items = [];
+//       result.forEach(function(item) {
+//         var itemObj = {
+//           item_id: item.item_id,
+//           quantity: item.quantity,
+//           seller_id: item.seller_id,
+//         }
+//         objToAnalytics.items.push(itemObj)
+//       })
+//       let qtyCheckParams = {
+//         MessageBody: JSON.stringify(objToAnalytics),
+//         QueueUrl: url.needsfraudscore
+//       }
+//       return sqs.sendMessage(qtyCheckParams).promise()
+//     })
+//     .then(data => {
+//       console.log("Success", data.MessageId);
+//     })
+//     .catch(error => {
+//       // res.sendStatus(500);
+//       console.log("ERROR CREATING OBJ TO ANALYTICS: ", error)
+//     })
+// }
 
-      var firstItem = result[0];
-      objToAnalytics.order = {
-        order_id: firstItem.order_id,
-        user_id: firstItem.user_id,
-        billing_state: firstItem.billing_state,
-        billing_ZIP: firstItem.billing_ZIP,
-        billing_country: firstItem.billing_country,
-        shipping_state: firstItem.shipping_state,
-        shipping_ZIP: firstItem.shipping_ZIP,
-        shipping_country: firstItem.shipping_country,
-        total_price: firstItem.total_price,
-        purchased_At: firstItem.purchased_At,
-        std_dev_from_aov: firstItem. std_dev_from_aov,
-      }
-      objToAnalytics.items = [];
+// createOrderObjToAnalytics(200) //UNCOMMENT TO SEND AN ORDER
+
+/*=================================
+EXAMPLE QTY CHECK INQUERY MESSAGE TO ANALYTICS
+=================================*/
+// var createQtyInquiryObjToInventory = function(order_id) {
+//   let qtyCheckObj = {}
+//   qtyCheckObj.order_id = order_id;
+//   return db.constObjToInventory(order_id)
+//     .then(result => {
+//       qtyCheckObj.items = []
+//       result.forEach(function(item) {
+//         var itemObj = {
+//           item_id: item.item_id,
+//           seller_id: item.seller_id
+//         }
+//         qtyCheckObj.items.push(itemObj)
+//       })
+//       let qtyUpdateParams = {
+//         MessageBody: JSON.stringify(qtyCheckObj),
+//         QueueUrl: url.needsqtycheck
+//       }
+//       return sqs.sendMessage(qtyUpdateParams).promise()
+//     })
+//     .then(data => {
+//       console.log("Success", data.MessageId);
+//     })
+//     .catch(error => {
+//       // res.sendStatus(500);
+//       console.log("Error sending qty check: ", error)
+//     })
+// }
+
+// createQtyInquiryObjToInventory(254)
+
+/*=================================
+EXAMPLE QTY UPDATE INQUERY MESSAGE TO ANALYTICS
+=================================*/
+var createQtyUpdateObjToInventory = function(order_id) {
+  let qtyUpdateObj = {};
+  return db.constObjToInventory(order_id)
+    .then(result => {
+      qtyUpdateObj.items = []
       result.forEach(function(item) {
         var itemObj = {
           item_id: item.item_id,
           quantity: item.quantity,
-          seller_id: item.seller_id,
+          seller_id: item.seller_id
         }
-        objToAnalytics.items.push(itemObj)
+        qtyUpdateObj.items.push(itemObj);
       })
-      let qtyCheckParams = {
+      // res.send(qtyUpdateObj);
+      let qtyUpdateParams = {
         MessageBody: JSON.stringify(objToAnalytics),
-        QueueUrl: url.fraud
+        QueueUrl: url.needsqtyupdate
       }
-      sqs.sendMessage(qtyCheckParams).promise()
-        .then(data => {
-          console.log("Success", data.MessageId);
-        })
-        .catch(error => {
-          console.log("Error: ", error)
-        })
+      return sqs.sendMessage(qtyUpdateParams).promise()
+    })
+    .then(data => {
+      console.log("Success", data.MessageId);
     })
     .catch(error => {
-      // res.sendStatus(500);
-      console.log("ERROR CREATING OBJ TO ANALYTICS: ", error)
+      console.log("Error sending qty update: ", error)
     })
 }
 
-// createOrderObjToAnalytics() //UNCOMMENT TO SEND AN ORDER
-
-/*=================================
-EXAMPLE QUANTITY CHECK TO INVENTORY
-=================================*/
-// var qtyCheckBody = {order_id: 12341234, items: [{item_id: 123456789012, seller_id: 120}, {item_id: 123456789011, seller_id: 134}]}
 
 
-// var qtyCheckParams = {
-// 	MessageBody: JSON.stringify(qtyCheckBody),
-// 	QueueUrl: url.qtycheck
+// module.exports = {
+//   createOrderObjToAnalytics,
+//   createQtyInquiryObjToInventory,
+//   createQtyUpdateObjToInventory
 // }
 
-// sqs.sendMessage(qtyCheckParams).promise()
-//   .then(data => {
-//     console.log("Success", data.MessageId);
-//   })
-//   .catch(error => {
-//     console.log("Error: ", error)
-//   })
 /*=================================
 EXAMPLE SEND MESSAGE
 =================================*/

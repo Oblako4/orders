@@ -40,3 +40,5 @@ config.json
 messagebus/config/config.json
 messagebus/config/config.js
 messagebus/config/useractivity/config.json
+messagebus/config/inventory/config.json
+messagebus/config/analytics/config.json

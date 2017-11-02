@@ -2,9 +2,12 @@ const bodyParser = require('body-parser');
 const elasticsearch = require('elasticsearch');
 const express = require('express');
 const Promise = require('bluebird');
+const AWS = require('aws-sdk');
+const Consumer = require('sqs-consumer');
 
-
-const db = require('../database/index.js')
+// const db = require('../database/index.js') //PRODUCTION DATABASE
+const db = require('../database/test.js') //TEST DATABASE
+const mb = require('../messagebus/index.js')
 
 const app = express()
 const PORT = process.env.PORT || 3000;
@@ -14,7 +17,6 @@ const PORT = process.env.PORT || 3000;
 // 	host: 'localhost:9200',
 // 	log: 'trace'
 // });
-
 
 
 //Routes==================================
@@ -130,8 +132,8 @@ app.post('/order', (req, res) => {
 	return db.addNewOrder(req.body)
 		.then(result => {
 			return Promise.all(
-				req.body.items.map(function (itemObj) {
-					db.addItem(itemObj);
+				req.body.order.items.map(function (itemObj) { //THIS HAS BEEN CHANGED MAY AFFECT OTHER AREAS
+					return db.addItem(itemObj); //ADDED RETURN HERE
 				})
 			)
 			.then((result) => {

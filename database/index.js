@@ -1,5 +1,6 @@
 const mysql = require('mysql');
 const Promise = require('bluebird');
+const moment = require('moment');
 
 const mysqlConfig = {
   host: process.env.DBSERVER || 'localhost',
@@ -57,7 +58,9 @@ const addItem = (itemObj) => {
 }
 
 const addPurchaseDate = (orderObj) => {
-  var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, \"${orderObj.purchased_at}\")`;
+  var purchased_at = moment(orderObj.purchased_at).format("YYYY-MM-DD HH:mm:ss");
+  // var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, \"${orderObj.purchased_at}\")`;
+  var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, "${purchased_at}")`
   return connection.queryAsync(dateQuery);
 }
 

@@ -1,5 +1,6 @@
 const mysql = require('mysql');
 const Promise = require('bluebird');
+const moment = require('moment');
 
 const mysqlConfig = {
   host: process.env.DBSERVER || 'localhost',
@@ -20,6 +21,10 @@ mysqlConnection.connect(function(err) {
 
 var connection = Promise.promisifyAll(mysqlConnection);
 
+/*====================================================
+TO CLEAR TEST DATABASE: 
+Run: mysql -u root -p < schema_test.sql
+====================================================*/
 
 /*====================================================
 Input: An order object received from User Activity API.
@@ -57,7 +62,9 @@ const addItem = (itemObj) => {
 }
 
 const addPurchaseDate = (orderObj) => {
-  var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, \"${orderObj.purchased_at}\")`;
+  var purchased_at = moment(orderObj.purchased_at).format("YYYY-MM-DD HH:mm:ss");
+  // var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, \"${orderObj.purchased_at}\")`;
+  var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, "${purchased_at}")`
   return connection.queryAsync(dateQuery);
 }
 
@@ -101,6 +108,18 @@ const getOrderByOrderId = (order_id) => {
   return connection.queryAsync(orderQuery);
 }
 
+const constructObjToAnalytics = (order_id) => {
+  let orderObj = {};
+  var orderQuery = `SELECT * FROM user_order, item, order_history WHERE item.order_id = ${order_id} AND user_order.order_id = ${order_id} AND order_history.order_id = ${order_id}`;
+  return connection.queryAsync(orderQuery);
+}
+
+const constObjToInventory = (order_id) => {
+  let itemObj = {};
+  var itemQuery = `SELECT * FROM item WHERE order_id = ${order_id}`;
+  return connection.queryAsync(itemQuery);
+}
+
 const getOrdersBetweenDates = (startDate, endDate) => {
   var orderQuery = `SELECT * FROM user_order WHERE order_id IN (SELECT order_id FROM order_history WHERE purchased_at >= "${startDate}" and purchased_at <= "${endDate}")`;
   return connection.queryAsync(orderQuery);
@@ -132,7 +151,10 @@ module.exports = {
   getOrdersWithFraudScoresAbove,
   getChargeBacksBetweenDates,
   getOrderByOrderId,
+  constructObjToAnalytics,
+  constObjToInventory,
 }
+
 
 
 

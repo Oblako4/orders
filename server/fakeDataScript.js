@@ -183,7 +183,7 @@ var constructInFlightOrderData = (numRowsInOrderDB) => {
       billing_address: createAddress(),
     }
     orderObj.order.shipping_address = createShipping(orderObj.order.billing_address);
-    orderObj.items = createItemArray(nextRow);
+    orderObj.order.items = createItemArray(nextRow);
     // console.log(orderObj)
     return orderObj;
 }

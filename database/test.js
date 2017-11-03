@@ -69,6 +69,11 @@ const addPurchaseDate = (orderObj) => {
   return connection.queryAsync(dateQuery);
 }
 
+const getPurchaseDate = (order_id) => {
+  var dateQuery = `SELECT purchased_at FROM order_history WHERE order_id = ${order_id}`;
+  return connection.queryAsync(dateQuery);
+}
+
 const updateOrderHistory = (field, date, order_id) => {
   var dateQuery = `UPDATE order_history SET ${field} = ${date} WHERE order_id = ${order_id}`;
   return connection.queryAsync(dateQuery);
@@ -107,6 +112,11 @@ const addStandardDev = (order_id, total_price, avg, std_dev) => {
 
 const getOrderByOrderId = (order_id) => {
   var orderQuery = `SELECT * FROM user_order WHERE order_id = ${order_id}`;
+  return connection.queryAsync(orderQuery);
+}
+
+const getOrderById = (id) => {
+  var orderQuery = `SELECT order_id FROM user_order WHERE id = ${id}`;
   return connection.queryAsync(orderQuery);
 }
 
@@ -155,6 +165,8 @@ module.exports = {
   getOrderByOrderId,
   constructObjToAnalytics,
   constObjToInventory,
+  getPurchaseDate,
+  getOrderById
 }
 
 

@@ -158,7 +158,67 @@ const handleInvCheck = (items) => {
       })
 }
 
-handleInvCheck(items)
+// handleInvCheck(items)
+
+/*
+INSERT INTO user_order (order_id, user_id, billing_name, billing_street, billing_city, billing_state, billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, total_price, card_num) 
+VALUES (6, 1, 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', '01609-1234', 'USA', 'Tiffany A Barth', '1 Cedar Street Apt #2', 'Worcester', 'MA', 01609, 'USA', 331.99, 1234123412341234);
+
+INSERT INTO item (order_id, item_id, quantity, listed_price, seller_id) VALUES (6, 178, 3, 31.99, 1);
+INSERT INTO item (order_id, item_id, quantity, listed_price, seller_id) VALUES (6, 179, 2, 200.00, 1);
+
+UPDATE user_order SET wholesale_total = 10.00 WHERE order_id = 6;
+
+INSERT INTO order_history (order_id, purchased_at) VALUES (6, '2017-10-25 23:42:07');
+
+
+UPDATE order_history SET declined_at = '2017-10-25 23:42:07' WHERE order_id = 6;
+*/
+var message = '{"order":{"order_id":6,"fraud_score":16}}';
+
+const handleFraud = (fraudMessage) => {
+  fraudMessage = JSON.parse(fraudMessage)
+
+  let order_id = fraudMessage.order.order_id;
+  let fraud_score = fraudMessage.order.fraud_score;
+
+  return db.getDeclinedDate(order_id)
+    .then(result => {
+      if (result[0].declined_at === null) {
+        if (fraud_score >= fraud_limit) {
+          console.log("DECLINED ORDER, FRAUD SCORE TOO HIGH")
+          return declineOrder(order_id)
+        } else {
+          return db.getWholesaleTotal(order_id)
+            .then(result => {
+              if (result[0].wholesale_total !== null) {
+                console.log("CONFIRMED ORDER")
+                return confirmOrder(order_id)
+              } else {
+                console.log("STILL WAITING FOR INVENTORY")
+                return result;
+              }
+            })
+        }
+      } else {
+        console.log("ORDER ALREADY DECLINED")
+        return result[0];
+      }
+    })
+    .then(result => {
+      return db.addFraudScore(fraudMessage)
+    })
+    .then(result => {
+      console.log("SUCCESSFULLY RECEIVED MESSAGE FROM ANALYTICS")
+      // done();
+    })
+    .catch(err => {
+      console.log("ERROR: ", err);
+    })
+  // done();
+}
+
+handleFraud(message);
 
 
 

@@ -101,6 +101,11 @@ const getFraudScore = (order_id) => {
   return connection.queryAsync(fraudQuery);
 }
 
+const getWholesaleTotal = (order_id) => {
+  var query = `SELECT wholesale_total FROM user_order WHERE order_id = ${order_id}`;
+  return connection.queryAsync(query);
+}
+
 //THIS HAS BEEN UPDATED
 const addInventoryDataToItem = (inventoryObj) => {
   var itemQuery = `UPDATE item SET wholesale_price = ${inventoryObj.wholesale_price} WHERE order_id = ${inventoryObj.order_id} AND item_id = ${inventoryObj.id} AND seller_id = ${inventoryObj.seller_id}`;
@@ -186,6 +191,7 @@ module.exports = {
   getItems,
   getFraudScore,
   getDeclinedDate,
+  getWholesaleTotal,
 }
 
 

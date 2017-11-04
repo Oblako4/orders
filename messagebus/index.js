@@ -7,9 +7,9 @@ const db = require('../database/test.js')  //TEST DATABASE
 const url = require('./config/config.js');
 
 // const queues = require('./queues') //uncomment when all are running
-// const ordersFromUsers = require('./queues/ordersFromUsers.js')
-// const fraudScoresFromAnalytics = require('./queues/fraudScoresFromAnalytics.js')
-// const qtyCheckFromInventory = require('./queues/qtyCheckFromInventory.js')
+const ordersFromUsers = require('./queues/ordersFromUsers.js')
+const fraudScoresFromAnalytics = require('./queues/fraudScoresFromAnalytics.js')
+const qtyCheckFromInventory = require('./queues/qtyCheckFromInventory.js')
 
 // AWS.config.loadFromPath(__dirname + '/config/config.json'); //for sending to my own queue
 // AWS.config.loadFromPath(__dirname + '/config/useractivity/config.json'); //for sending to useractivity?

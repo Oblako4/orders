@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const axios = require('axios');
 const Consumer = require('sqs-consumer');
+const moment = require("moment");
 
 // const db = require('../../database/index.js') //PRODUCTION DATABASE
 const db = require('../../database/test.js')  //TEST DATABASE
@@ -22,17 +23,6 @@ const confirmOrder = (order_id) => {
   var now = moment().format("YYYY-MM-DD HH:mm:ss");
   return db.updateOrderHistory("confirmed_at", now, order_id)
 }
-
-
-//check if order has already been declined
-  //if not, check if fraud score is above limit
-    //if yes, decline order
-    //if no, check if wholesale price is not null
-      //if not null, confirm order
-      //if null, do nothing
-  //if yes, return decline result
-//add fraud score
-
 
 const fraudscores = Consumer.create({
   queueUrl: url.fraudscores,
@@ -84,7 +74,7 @@ const fraudscores = Consumer.create({
 
 fraudscores.on('error', (err) => {
 	console.log(err.message);
-	// done(err); //can i keep this here?
+	done(err); //can i keep this here?
 })
 
 fraudscores.start()

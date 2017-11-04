@@ -51,14 +51,13 @@ const isFraudScoreAvail = (order_id) => {
 const qtycheck = Consumer.create({
   queueUrl: url.qtycheck,
   handleMessage: (message, done) => {
-  	console.log('message: ', message.Body)
-
+  	console.log('message:', message.Body)
+    var items = JSON.parse(message.Body);
     let wholesale_total = 0; //changed from var to let
     let order_id = items[0].order_id; //changed from var to let
     return db.getDeclinedDate(order_id)
       .then(result => {
-        console.log(result);
-        if (result[0].declined_at === null) {
+        if (!result[0].declined_at !== null) {
           return db.getItems(order_id)
               .then(purchasedItems => {
                 if (isInvQtySufficient(purchasedItems, items)) {
@@ -111,7 +110,7 @@ const qtycheck = Consumer.create({
 
 qtycheck.on('error', (err) => {
 	console.log(err.message);
-	// done(err); //can i keep this here?
+	done(err); //can i keep this here?
 })
 
 qtycheck.start()

@@ -1,4 +1,26 @@
+const cron = require('node-cron');
 const moment = require("moment");
+
+const db = require('../database/test.js')
+
+
+//check if wholesale_total = 0
+  //if yes, decline order
+  //if no, check if fraud score > fraud limit
+    //if yes, decline
+    //if no, confirm
+
+
+
+
+
+
+
+
+
+
+
+
 
 // let lastOrderHandled = 1;
 // let fraudLimit = 75;
@@ -15,7 +37,7 @@ const moment = require("moment");
 
 //OR ON LISTENERS CHECK IF INFO IS THERE FOR OTHER FACTORS
 
-const db = require('../database/test.js')
+
 
 // const declineOrder = (order_id) => {
 //   var now = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -51,112 +73,112 @@ INSERT INTO order_history (order_id, purchased_at) VALUES (6, '2017-10-25 23:42:
 UPDATE order_history SET declined_at = '2017-10-25 23:42:07' WHERE order_id = 6;
 */
 //INSUFFICIENT QTY:
-var items = JSON.parse('[{"id":178,"seller_id":1,"wholesale_price":20,"quantity":1,"order_id":6},{"id":179,"seller_id":1,"wholesale_price":19,"quantity":1,"order_id":6}]');
+// var items = JSON.parse('[{"id":178,"seller_id":1,"wholesale_price":20,"quantity":1,"order_id":6},{"id":179,"seller_id":1,"wholesale_price":19,"quantity":1,"order_id":6}]');
+// //                      [{"id":639,"seller_id":1,"wholesale_price":199,"quantity":100,"order_id":4891},{"id":639,"seller_id":1,"wholesale_price":199,"quantity":100,"order_id":4891}]
+// //SUFFICIENT QTY:
+// // var items = JSON.parse('[{"id":178,"seller_id":1,"wholesale_price":20,"quantity":20,"order_id":6},{"id":179,"seller_id":1,"wholesale_price":19,"quantity":20,"order_id":6}]');
 
-//SUFFICIENT QTY:
-// var items = JSON.parse('[{"id":178,"seller_id":1,"wholesale_price":20,"quantity":20,"order_id":6},{"id":179,"seller_id":1,"wholesale_price":19,"quantity":20,"order_id":6}]');
+// //ADD FRAUD SCORE ABOVE LIMIT
+// //UPDATE user_order SET fraud_score = 100 WHERE order_id = 6;
 
-//ADD FRAUD SCORE ABOVE LIMIT
-//UPDATE user_order SET fraud_score = 100 WHERE order_id = 6;
-
-//ADD FRAUD SCORE BELOW LIMIT
-//UPDATE user_order SET fraud_score = 1 WHERE order_id = 6;
-// var items = JSON.parse('[{"id":178,"seller_id":1,"wholesale_price":20,"quantity":20,"order_id":6},{"id":179,"seller_id":1,"wholesale_price":19,"quantity":20,"order_id":6}]');
+// //ADD FRAUD SCORE BELOW LIMIT
+// //UPDATE user_order SET fraud_score = 1 WHERE order_id = 6;
+// // var items = JSON.parse('[{"id":178,"seller_id":1,"wholesale_price":20,"quantity":20,"order_id":6},{"id":179,"seller_id":1,"wholesale_price":19,"quantity":20,"order_id":6}]');
 
 
-var fraud_limit = 75;
-// console.log(items);
-// console.log(typeof items)
-// console.log(items[0].quantity)
+// var fraud_limit = 75;
+// // console.log(items);
+// // console.log(typeof items)
+// // console.log(items[0].quantity)
 
-const isInvQtySufficient = (purchasedItems, invItems) => {
-  let isQtySufficient = true;
-  purchasedItems.forEach(function(purchasedItem, index) {
-    if (purchasedItem.quantity > invItems[index].quantity) {
-      isQtySufficient = false
-    }
-  })
-  return isQtySufficient;
-}
+// const isInvQtySufficient = (purchasedItems, invItems) => {
+//   let isQtySufficient = true;
+//   purchasedItems.forEach(function(purchasedItem, index) {
+//     if (purchasedItem.quantity > invItems[index].quantity) {
+//       isQtySufficient = false
+//     }
+//   })
+//   return isQtySufficient;
+// }
 
-const declineOrder = (order_id) => {
-  let now = moment().format("YYYY-MM-DD HH:mm:ss");
-  return db.updateOrderHistory("declined_at", now, order_id)
-}
+// const declineOrder = (order_id) => {
+//   let now = moment().format("YYYY-MM-DD HH:mm:ss");
+//   return db.updateOrderHistory("declined_at", now, order_id)
+// }
 
-const confirmOrder = (order_id) => {
-  let now = moment().format("YYYY-MM-DD HH:mm:ss");
-  return db.updateOrderHistory("confirmed_at", now, order_id)
-}
+// const confirmOrder = (order_id) => {
+//   let now = moment().format("YYYY-MM-DD HH:mm:ss");
+//   return db.updateOrderHistory("confirmed_at", now, order_id)
+// }
 
-const isFraudScoreAvail = (order_id) => {
-  return db.getFraudScore(order_id)
-  .then(result => {
-    if (result[0].fraud_score === null) {
-      // console.log(result[0].fraud_score)
-      return null;
-    } else {
-      return result[0].fraud_score
-    }
-  })
-  .catch(err => {
-    console.log('ERROR: ', err);
-  })
-}
+// const isFraudScoreAvail = (order_id) => {
+//   return db.getFraudScore(order_id)
+//   .then(result => {
+//     if (result[0].fraud_score === null) {
+//       // console.log(result[0].fraud_score)
+//       return null;
+//     } else {
+//       return result[0].fraud_score
+//     }
+//   })
+//   .catch(err => {
+//     console.log('ERROR: ', err);
+//   })
+// }
 
-const handleInvCheck = (items) => {
-    let wholesale_total = 0;
-    let order_id = items[0].order_id
-    return db.getDeclinedDate(order_id)
-      .then(result => {
-        console.log(result);
-        if (result[0].declined_at === null) {
-          return db.getItems(order_id)
-              .then(purchasedItems => {
-                if (isInvQtySufficient(purchasedItems, items)) {
-                  return Promise.all(
-                    items.map(function(itemObj, index) {
-                      order_id = itemObj.order_id;
-                      wholesale_total += itemObj.wholesale_price * purchasedItems[index].quantity; //THIS HAS BEEN UPDATED
-                      return db.addInventoryDataToItem(itemObj)
-                    })
-                  )
-                  .then(result => {
-                    return isFraudScoreAvail(order_id)
-                  })
-                  .then(fraud_score => {
-                    if (typeof fraud_score === "number") {
-                      if (fraud_score < fraud_limit) {
-                        console.log("CONFIRMED ORDER")
-                        return confirmOrder(order_id)
-                      } else {
-                        console.log("DECLINED ORDER, FRAUD SCORE TOO HIGH")
-                        return declineOrder(order_id)
-                      }
-                    } 
-                  })
-                } else {
-                  console.log("DECLINED ORDER, QTY NOT SUFFICIENT")
-                  return declineOrder(order_id)
-                }
-              })
-        } else {
-          console.log("ALREADY HAS ALREADY BEEN DECLINED");
-          return result[0].declined_at;
-          // return "declined"
-        }
-      })
-      .then(result => {
-        return db.addWholesaleTotal(order_id, wholesale_total)
-      })
-      .then(result => {
-        console.log("SUCCESSFULLY RECEIVED QTY CHECK FROM INVENTORY")
-        // done();
-      })
-      .catch(err => {
-        console.log("ERROR: ", err);
-      })
-}
+// const handleInvCheck = (items) => {
+//     let wholesale_total = 0;
+//     let order_id = items[0].order_id
+//     return db.getDeclinedDate(order_id)
+//       .then(result => {
+//         console.log(result);
+//         if (result[0].declined_at === null) {
+//           return db.getItems(order_id)
+//               .then(purchasedItems => {
+//                 if (isInvQtySufficient(purchasedItems, items)) {
+//                   return Promise.all(
+//                     items.map(function(itemObj, index) {
+//                       order_id = itemObj.order_id;
+//                       wholesale_total += itemObj.wholesale_price * purchasedItems[index].quantity; //THIS HAS BEEN UPDATED
+//                       return db.addInventoryDataToItem(itemObj)
+//                     })
+//                   )
+//                   .then(result => {
+//                     return isFraudScoreAvail(order_id)
+//                   })
+//                   .then(fraud_score => {
+//                     if (typeof fraud_score === "number") {
+//                       if (fraud_score < fraud_limit) {
+//                         console.log("CONFIRMED ORDER")
+//                         return confirmOrder(order_id)
+//                       } else {
+//                         console.log("DECLINED ORDER, FRAUD SCORE TOO HIGH")
+//                         return declineOrder(order_id)
+//                       }
+//                     } 
+//                   })
+//                 } else {
+//                   console.log("DECLINED ORDER, QTY NOT SUFFICIENT")
+//                   return declineOrder(order_id)
+//                 }
+//               })
+//         } else {
+//           console.log("ALREADY HAS ALREADY BEEN DECLINED");
+//           return result[0].declined_at;
+//           // return "declined"
+//         }
+//       })
+//       .then(result => {
+//         return db.addWholesaleTotal(order_id, wholesale_total)
+//       })
+//       .then(result => {
+//         console.log("SUCCESSFULLY RECEIVED QTY CHECK FROM INVENTORY")
+//         // done();
+//       })
+//       .catch(err => {
+//         console.log("ERROR: ", err);
+//       })
+// }
 
 // handleInvCheck(items)
 
@@ -174,51 +196,51 @@ INSERT INTO order_history (order_id, purchased_at) VALUES (6, '2017-10-25 23:42:
 
 UPDATE order_history SET declined_at = '2017-10-25 23:42:07' WHERE order_id = 6;
 */
-var message = '{"order":{"order_id":6,"fraud_score":16}}';
+// var message = '{"order":{"order_id":6,"fraud_score":16}}';
 
-const handleFraud = (fraudMessage) => {
-  fraudMessage = JSON.parse(fraudMessage)
+// const handleFraud = (fraudMessage) => {
+//   fraudMessage = JSON.parse(fraudMessage)
 
-  let order_id = fraudMessage.order.order_id;
-  let fraud_score = fraudMessage.order.fraud_score;
+//   let order_id = fraudMessage.order.order_id;
+//   let fraud_score = fraudMessage.order.fraud_score;
 
-  return db.getDeclinedDate(order_id)
-    .then(result => {
-      if (result[0].declined_at === null) {
-        if (fraud_score >= fraud_limit) {
-          console.log("DECLINED ORDER, FRAUD SCORE TOO HIGH")
-          return declineOrder(order_id)
-        } else {
-          return db.getWholesaleTotal(order_id)
-            .then(result => {
-              if (result[0].wholesale_total !== null) {
-                console.log("CONFIRMED ORDER")
-                return confirmOrder(order_id)
-              } else {
-                console.log("STILL WAITING FOR INVENTORY")
-                return result;
-              }
-            })
-        }
-      } else {
-        console.log("ORDER ALREADY DECLINED")
-        return result[0];
-      }
-    })
-    .then(result => {
-      return db.addFraudScore(fraudMessage)
-    })
-    .then(result => {
-      console.log("SUCCESSFULLY RECEIVED MESSAGE FROM ANALYTICS")
-      // done();
-    })
-    .catch(err => {
-      console.log("ERROR: ", err);
-    })
-  // done();
-}
+//   return db.getDeclinedDate(order_id)
+//     .then(result => {
+//       if (result[0].declined_at === null) {
+//         if (fraud_score >= fraud_limit) {
+//           console.log("DECLINED ORDER, FRAUD SCORE TOO HIGH")
+//           return declineOrder(order_id)
+//         } else {
+//           return db.getWholesaleTotal(order_id)
+//             .then(result => {
+//               if (result[0].wholesale_total !== null) {
+//                 console.log("CONFIRMED ORDER")
+//                 return confirmOrder(order_id)
+//               } else {
+//                 console.log("STILL WAITING FOR INVENTORY")
+//                 return result;
+//               }
+//             })
+//         }
+//       } else {
+//         console.log("ORDER ALREADY DECLINED")
+//         return result[0];
+//       }
+//     })
+//     .then(result => {
+//       return db.addFraudScore(fraudMessage)
+//     })
+//     .then(result => {
+//       console.log("SUCCESSFULLY RECEIVED MESSAGE FROM ANALYTICS")
+//       // done();
+//     })
+//     .catch(err => {
+//       console.log("ERROR: ", err);
+//     })
+//   // done();
+// }
 
-handleFraud(message);
+// handleFraud(message);
 
 
 

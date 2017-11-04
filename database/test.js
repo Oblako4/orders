@@ -23,7 +23,7 @@ var connection = Promise.promisifyAll(mysqlConnection);
 
 /*====================================================
 TO CLEAR TEST DATABASE: 
-Run: mysql -u root -p < schema_test.sql
+Run: mysql -u root < schema_test.sql
 ====================================================*/
 
 /*====================================================
@@ -62,6 +62,11 @@ const addItem = (itemObj) => {
   return connection.queryAsync(itemQuery, itemValues);
 }
 
+const getItems = (order_id) => {
+  var itemQuery = `SELECT * FROM item WHERE order_id = ${order_id}`;
+  return connection.queryAsync(itemQuery);
+}
+
 const addPurchaseDate = (orderObj) => {
   var purchased_at = moment(orderObj.purchased_at).format("YYYY-MM-DD HH:mm:ss");
   // var dateQuery = `INSERT INTO order_history (order_id, purchased_at) VALUES (${orderObj.id}, \"${orderObj.purchased_at}\")`;
@@ -74,8 +79,13 @@ const getPurchaseDate = (order_id) => {
   return connection.queryAsync(dateQuery);
 }
 
+const getDeclinedDate = (order_id) => {
+  var dateQuery = `SELECT declined_at FROM order_history WHERE order_id = ${order_id}`;
+  return connection.queryAsync(dateQuery);
+}
+
 const updateOrderHistory = (field, date, order_id) => {
-  var dateQuery = `UPDATE order_history SET ${field} = ${date} WHERE order_id = ${order_id}`;
+  var dateQuery = `UPDATE order_history SET ${field} = "${date}" WHERE order_id = ${order_id}`;
   return connection.queryAsync(dateQuery);
 }
 
@@ -86,8 +96,14 @@ const addFraudScore = (analyticsObj) => {
   return connection.queryAsync(fraudQuery);
 }
 
+const getFraudScore = (order_id) => {
+  var fraudQuery = `SELECT fraud_score FROM user_order WHERE order_id = ${order_id}`;
+  return connection.queryAsync(fraudQuery);
+}
+
+//THIS HAS BEEN UPDATED
 const addInventoryDataToItem = (inventoryObj) => {
-  var itemQuery = `UPDATE item SET wholesale_price = ${inventoryObj.wholesale_price}, seller_id = ${inventoryObj.seller_id} WHERE order_id = ${inventoryObj.order_id} AND item_id = ${inventoryObj.id}`;
+  var itemQuery = `UPDATE item SET wholesale_price = ${inventoryObj.wholesale_price} WHERE order_id = ${inventoryObj.order_id} AND item_id = ${inventoryObj.id} AND seller_id = ${inventoryObj.seller_id}`;
   return connection.queryAsync(itemQuery);
 }
 
@@ -166,7 +182,10 @@ module.exports = {
   constructObjToAnalytics,
   constObjToInventory,
   getPurchaseDate,
-  getOrderById
+  getOrderById,
+  getItems,
+  getFraudScore,
+  getDeclinedDate,
 }
 
 

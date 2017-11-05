@@ -23,10 +23,9 @@ var qtyUpdateToInventory = function(order_id) {
         }
         qtyUpdateObj.items.push(itemObj);
       })
-      // res.send(qtyUpdateObj);
       let qtyUpdateParams = {
         MessageBody: JSON.stringify(objToAnalytics),
-        QueueUrl: url.needsqtyupdate
+        QueueUrl: url.qtyupdate
       }
       return sqs.sendMessage(qtyUpdateParams).promise()
     })

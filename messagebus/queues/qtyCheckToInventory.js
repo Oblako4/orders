@@ -26,12 +26,13 @@ var qtyCheckToInventory = function(order_id) {
       })
       let qtyUpdateParams = {
         MessageBody: JSON.stringify(qtyCheckObj),
-        QueueUrl: url.needsqtycheck
+        QueueUrl: url.needscheck
       }
       return sqs.sendMessage(qtyUpdateParams).promise()
     })
     .then(data => {
-      console.log("Success", data.MessageId);
+      // console.log("Success", data.MessageId);
+      return data.MessageId;
     })
     .catch(error => {
       // res.sendStatus(500);

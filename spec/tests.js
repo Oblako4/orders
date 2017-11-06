@@ -2,7 +2,10 @@ const axios = require('axios');
 var mysql = require('mysql');
 var request = require('request'); 
 var expect = require('chai').expect;
+
 const db = require('../database/test.js');
+const check = require('../messagebus/queues/qtyCheckToInventory.js');
+const update = require('../messagebus/queues/qtyUpdateToInventory.js');
 
 describe('Database schema tests', function() {
 
@@ -108,16 +111,6 @@ describe('Database schema tests', function() {
 
 describe('Server POST endpoint tests', function() {
 
-  after(function() {
-    return db.connection.endAsync()
-      .then(result => {
-        console.log('Connection ending')
-      })
-      .catch(err => {
-        console.log('Cannot end connection', err);
-      })
-  })
-
   it('Should accept the in-flight object structure from Users API', function() {
     var in_flight = `{"order":{"id":971,"user_id":971,"purchased_at":"2017-11-04T20:43:32.000Z","card":{"id":971,"num":"6865663466964728"},
     "billing_address":{"id":1942,"name":"Pierce Cronin","street":"3487 Leuschke Stravenue Apt. 401","city":"Lake Julestown","state":"HI",
@@ -136,7 +129,8 @@ describe('Server POST endpoint tests', function() {
   })
 
   it('Should accept the in-flight object structure from Inventory API', function() {
-    var in_flight = `[{"id":8490,"seller_id":4,"wholesale_price":199,"quantity":100,"order_id":971},{"id":8491,"seller_id":4,"wholesale_price":120,"quantity":100,"order_id":971}]`;
+    var in_flight = `[{"id":8490,"seller_id":4,"wholesale_price":199,"quantity":100,"order_id":971},
+    {"id":8491,"seller_id":4,"wholesale_price":120,"quantity":100,"order_id":971}]`;
     
     return axios.post('http://127.0.0.1:3000/inventoryinfo', JSON.parse(in_flight))
     .then(res => {
@@ -172,6 +166,45 @@ describe('Server POST endpoint tests', function() {
     })
   })
 
+})
+
+describe('SQS Tests', function() {
+
+  after(function() {
+    return db.connection.endAsync()
+      .then(result => {
+        console.log('Connection ending')
+      })
+      .catch(err => {
+        console.log('Cannot end connection', err);
+      })
+  })
+
+  it('Should allow messages to be placed in check queue', function() {
+    
+    return check.qtyCheckToInventory(971)
+      .then(MessageId => {
+        // console.log("message id: ", MessageId);
+        expect(MessageId).to.not.be.undefined;
+      })
+      .catch(err => {
+        // console.log("ERROR: ", err)
+        expect(false).to.equal(true);
+      })
+  })
+
+  it('Should allow messages to be placed in update queue', function() {
+    
+    return update.qtyUpdateToInventory(971)
+      .then(MessageId => {
+        // console.log("message id: ", MessageId);
+        expect(MessageId).to.not.be.undefined;
+      })
+      .catch(err => {
+        // console.log("ERROR: ", err)
+        expect(false).to.equal(true);
+      })
+  })
 })
 
 

@@ -8,7 +8,7 @@ const url = require('../config/config.js');
 const inv = require('./qtyCheckToInventory.js');
 const analytics = require('./fraudScoreCheckToAnalytics');
 
-AWS.config.loadFromPath(__dirname + '/../config/useractivity/config.json');
+AWS.config.loadFromPath(__dirname + '/../config/config.json');
 AWS.config.setPromisesDependency(require('bluebird'));
 var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 

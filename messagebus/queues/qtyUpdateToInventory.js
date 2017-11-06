@@ -6,7 +6,8 @@ const Consumer = require('sqs-consumer');
 const db = require('../../database/test.js')  //TEST DATABASE
 const url = require('../config/config.js');
 
-AWS.config.loadFromPath(__dirname + '/../config/useractivity/config.json');
+// AWS.config.loadFromPath(__dirname + '/../config/useractivity/config.json');
+AWS.config.loadFromPath(__dirname + '/../config/config.json');
 AWS.config.setPromisesDependency(require('bluebird'));
 var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 
@@ -24,13 +25,14 @@ var qtyUpdateToInventory = function(order_id) {
         qtyUpdateObj.items.push(itemObj);
       })
       let qtyUpdateParams = {
-        MessageBody: JSON.stringify(objToAnalytics),
-        QueueUrl: url.qtyupdate
+        MessageBody: JSON.stringify(qtyUpdateObj),
+        QueueUrl: url.needsupdate
       }
       return sqs.sendMessage(qtyUpdateParams).promise()
     })
     .then(data => {
-      console.log("Success", data.MessageId);
+      // console.log("Success", data.MessageId);
+      return data.MessageId;
     })
     .catch(error => {
       console.log("Error sending qty update: ", error)

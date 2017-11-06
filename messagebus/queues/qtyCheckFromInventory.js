@@ -7,7 +7,8 @@ const moment = require('moment');
 const db = require('../../database/test.js')  //TEST DATABASE
 const url = require('../config/config.js');
 
-AWS.config.loadFromPath(__dirname + '/../config/useractivity/config.json');
+// AWS.config.loadFromPath(__dirname + '/../config/useractivity/config.json');
+AWS.config.loadFromPath(__dirname + '/../config/config.json');
 AWS.config.setPromisesDependency(require('bluebird'));
 var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 
@@ -108,7 +109,7 @@ const qtycheck = Consumer.create({
   sqs: sqs
 })
 
-qtycheck.on('error', (err) => {
+qtycheck.on('error', (err, done) => {
 	console.log(err.message);
 	done(err); //can i keep this here?
 })

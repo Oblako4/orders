@@ -70,9 +70,10 @@ const confirmOrDecline = Consumer.create({
         console.log("order_id: ", order_id);
         if (result[0].wholesale_total !== null && result[0].fraud_score !== null) {
           if (result[0].wholesale_total !== 0 && result[0].fraud_score < fraud_limit) {
-            console.log("CONFIRMING ORDER ID ${order_id}")
+            console.log(`CONFIRMING ORDER ID ${order_id}`)
             return confirmOrder(order_id)
               .then(result => {
+                console.log("SENDING QTY UPDATE TO INVENTORY")
                 return inv.qtyUpdateToInventory(order_id)
               })
           } else {
@@ -81,7 +82,8 @@ const confirmOrDecline = Consumer.create({
           }
         } else {
           console.log(`ORDER ${order_id} NOT READY TO BE PROCESSED`)
-          return addOrderBackIntoQueue(order_id);
+          // return addOrderBackIntoQueue(order_id);
+          return order_id;
         }
       })
       .then(result => {
@@ -102,13 +104,14 @@ confirmOrDecline.on('error', (err) => {
   done(err); //can i keep this here?
 })
 
-confirmOrDecline.start()
-
+// confirmOrDecline.start()
 // getOrdersNeedingProcessed();
+
 
 var task = cron.schedule('* * * * *', function() {
   // console.log(`ran task ${j++}`);
   console.log('GATHERING ORDERS TO BE PROCESSED')
   getOrdersNeedingProcessed();
 }, true);
-task.start();
+// task.start();
+task.stop();

@@ -173,7 +173,7 @@ app.post('/inventoryinfo', (req, res) => {
 	var order_id;
 	var wholesale_total = 0;
 	return Promise.all(
-		req.body.map(function(itemObj) {
+		req.body.items.map(function(itemObj) {
 			order_id = itemObj.order_id;
 			wholesale_total += itemObj.wholesale_price;
 			db.addInventoryDataToItem(itemObj)

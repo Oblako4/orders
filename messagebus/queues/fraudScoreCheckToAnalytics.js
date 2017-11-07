@@ -15,6 +15,7 @@ var createOrderObjToAnalytics = function(order_id) {
   let objToAnalytics = {}
   return db.constructObjToAnalytics(order_id)
     .then(result => {
+      // console.log("result from db", result)
       var firstItem = result[0];
       objToAnalytics.order = {
         order_id: firstItem.order_id,
@@ -45,7 +46,7 @@ var createOrderObjToAnalytics = function(order_id) {
       return sqs.sendMessage(qtyCheckParams).promise()
     })
     .then(data => {
-      console.log("Success", data.MessageId);
+      console.log("SUCCESS SENDING OBJ TO ANALYTICS", data.MessageId);
     })
     .catch(error => {
       // res.sendStatus(500);

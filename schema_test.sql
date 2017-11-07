@@ -16,7 +16,7 @@ USE orders_API_test;
 DROP TABLE IF EXISTS user_order;
     
 CREATE TABLE user_order (
-  id INTEGER NOT NULL AUTO_INCREMENT,
+  -- id INTEGER NOT NULL AUTO_INCREMENT,
   order_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL,
   billing_name VARCHAR(50) NOT NULL,
@@ -37,8 +37,8 @@ CREATE TABLE user_order (
   wholesale_total DECIMAL(7, 2) NULL DEFAULT NULL,
   std_dev_from_aov DECIMAL(7, 5) NULL DEFAULT NULL,
   UNIQUE(order_id),
-  INDEX (order_id),
-  PRIMARY KEY (id)
+  -- INDEX (order_id),
+  PRIMARY KEY (order_id)
 );
 
 -- ---
@@ -68,15 +68,15 @@ CREATE TABLE item (
 DROP TABLE IF EXISTS order_history;
     
 CREATE TABLE order_history (
-  id INTEGER NOT NULL AUTO_INCREMENT,
-  order_id INTEGER NULL DEFAULT NULL,
+  -- id INTEGER NOT NULL AUTO_INCREMENT,
+  order_id INTEGER NOT NULL,
   purchased_at TIMESTAMP NOT NULL,
   declined_at TIMESTAMP NULL DEFAULT NULL,
   confirmed_at TIMESTAMP NULL DEFAULT NULL,
   processed_at TIMESTAMP NULL DEFAULT NULL,
   chargedback_at TIMESTAMP NULL DEFAULT NULL,
-  INDEX(order_id),
-  PRIMARY KEY (id)
+  -- INDEX(order_id),
+  PRIMARY KEY (order_id)
 );
 
 -- ---

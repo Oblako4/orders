@@ -69,11 +69,17 @@ const qtycheck = Consumer.create({
       }
     })
     .then(result => {
+      console.log("SUCCESSFULLY RECEIVED QTY CHECK FROM INVENTORY")
       return db.addWholesaleTotal(order_id, wholesale_total)
+      // done();
+    })
+    .then(result => {
+      done();
     })
     .catch(err => {
       console.log("ERROR: ", err);
     })
+    // done();
   },
   sqs: sqs
 })

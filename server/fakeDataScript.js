@@ -303,8 +303,8 @@ var generateMultipleOrdersWithoutRequest = (numOrders, numRowsInOrderDB) => {
   }
 }
 
-var numOrders = 1;
-var numRowsInOrderDB = 48298;
+var numOrders = 50;
+var numRowsInOrderDB = 20000000;
 var j = 1;
 var task = cron.schedule('0-55 * * * * *', function() {
   console.log(`ran task ${j++}`);

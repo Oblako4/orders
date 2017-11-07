@@ -106,10 +106,10 @@ confirmOrDecline.on('error', (err) => {
 
 // getOrdersNeedingProcessed();
 
-var task = cron.schedule('* * * * *', function() {
-  // console.log(`ran task ${j++}`);
-  console.log('GATHERING ORDERS TO BE PROCESSED')
-  getOrdersNeedingProcessed();
-}, true);
+// var task = cron.schedule('* * * * *', function() {
+//   // console.log(`ran task ${j++}`);
+//   console.log('GATHERING ORDERS TO BE PROCESSED')
+//   getOrdersNeedingProcessed();
+// }, true);
 // task.start();
 

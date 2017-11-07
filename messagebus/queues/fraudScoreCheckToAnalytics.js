@@ -7,7 +7,7 @@ const db = require('../../database/test.js')  //TEST DATABASE
 const url = require('../config/config.js');
 const inv = require('./qtyCheckToInventory.js');
 
-AWS.config.loadFromPath(__dirname + '/../config/analytics/config.json');
+AWS.config.loadFromPath(__dirname + '/../config/config.json');
 AWS.config.setPromisesDependency(require('bluebird'));
 var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 

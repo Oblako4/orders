@@ -168,6 +168,16 @@ const getChargeBacksBetweenDates = (startDate, endDate) => {
   return connection.queryAsync(orderQuery);
 }
 
+const getOrdersToBeProcessed = () => {
+  var orderQuery = `SELECT order_id FROM order_history WHERE confirmed_at IS NULL AND declined_at IS NULL`;
+  return connection.queryAsync(orderQuery);
+}
+
+const getWholesaleAndFraud = (order_id) => {
+  var orderQuery = `SELECT wholesale_total, fraud_score FROM user_order WHERE order_id = ${order_id}`;
+  return connection.queryAsync(orderQuery);
+}
+
 
 module.exports = {
   connection,
@@ -192,6 +202,8 @@ module.exports = {
   getFraudScore,
   getDeclinedDate,
   getWholesaleTotal,
+  getOrdersToBeProcessed,
+  getWholesaleAndFraud,
 }
 
 

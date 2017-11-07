@@ -30,36 +30,7 @@ const fraudscores = Consumer.create({
   handleMessage: (message, done) => {
     console.log('message: ', message)
     let fraudMessage = JSON.parse(message.Body)
-    
-    let order_id = fraudMessage.order.order_id;
-    let fraud_score = fraudMessage.order.fraud_score;
-
-    return db.getDeclinedDate(order_id)
-      .then(result => {
-        if (result[0].declined_at === null) {
-          if (fraud_score >= fraud_limit) {
-            console.log("DECLINED ORDER, FRAUD SCORE TOO HIGH")
-            return declineOrder(order_id)
-          } else {
-            return db.getWholesaleTotal(order_id)
-              .then(result => {
-                if (result[0].wholesale_total !== null) {
-                  console.log("CONFIRMED ORDER")
-                  return confirmOrder(order_id)
-                } else {
-                  console.log("STILL WAITING FOR INVENTORY")
-                  return result;
-                }
-              })
-          }
-        } else {
-          console.log("ORDER ALREADY DECLINED")
-          return result[0];
-        }
-      })
-      .then(result => {
-        return db.addFraudScore(fraudMessage)
-      })
+    return db.addFraudScore(fraudMessage)
       .then(result => {
         console.log("SUCCESSFULLY RECEIVED MESSAGE FROM ANALYTICS")
         done();
@@ -71,6 +42,53 @@ const fraudscores = Consumer.create({
   },
   sqs: sqs
 })
+
+// const fraudscores = Consumer.create({
+//   queueUrl: url.fraudscores,
+//   handleMessage: (message, done) => {
+//     console.log('message: ', message)
+//     let fraudMessage = JSON.parse(message.Body)
+    
+//     let order_id = fraudMessage.order.order_id;
+//     let fraud_score = fraudMessage.order.fraud_score;
+
+//     return db.getDeclinedDate(order_id)
+//       .then(result => {
+//         if (result[0].declined_at === null) {
+//           if (fraud_score >= fraud_limit) {
+//             console.log("DECLINED ORDER, FRAUD SCORE TOO HIGH")
+//             return declineOrder(order_id)
+//           } else {
+//             return db.getWholesaleTotal(order_id)
+//               .then(result => {
+//                 if (result[0].wholesale_total !== null) {
+//                   console.log("CONFIRMED ORDER")
+//                   return confirmOrder(order_id)
+//                 } else {
+//                   console.log("STILL WAITING FOR INVENTORY")
+//                   return result;
+//                 }
+//               })
+//           }
+//         } else {
+//           console.log("ORDER ALREADY DECLINED")
+//           return result[0];
+//         }
+//       })
+//       .then(result => {
+//         return db.addFraudScore(fraudMessage)
+//       })
+//       .then(result => {
+//         console.log("SUCCESSFULLY RECEIVED MESSAGE FROM ANALYTICS")
+//         done();
+//       })
+//       .catch(err => {
+//         console.log("ERROR: ", err);
+//       })
+//     // done();
+//   },
+//   sqs: sqs
+// })
 
 
 fraudscores.on('error', (err) => {

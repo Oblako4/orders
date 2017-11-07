@@ -63,6 +63,18 @@ describe('Database schema tests', function() {
   });
 
   it('Should insert purchase date into order_history table', function() {
+    var query = `INSERT INTO order_history (order_id, purchased_at) VALUES (10001, '2017-10-25 23:42:07')`;
+
+    return db.connection.queryAsync(query)
+      .then(result => {
+        expect(true).to.equal(true);
+      })
+      .catch(err => {
+        expect(false).to.equal(true);
+      })
+  });
+
+  it('Should allow the order_history table to be updated with a decline date', function() {
     var query = `UPDATE order_history SET declined_at = '2017-10-25 23:42:07' WHERE order_id = 10001`;
 
     return db.connection.queryAsync(query)

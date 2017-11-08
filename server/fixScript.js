@@ -1,4 +1,4 @@
-const db = require('../database/index.js');
+const db = require('../database/test.js');
 const connection = db.connection;
 const Promise = require('bluebird');
 const cron = require('node-cron');
@@ -129,7 +129,53 @@ var task = cron.schedule('0-59 * * * * *', function() {
   console.log(`ran task ${j++}`);
   fixMissingWholesaleTotal()
 })
-task.start();
+task.stop();
+
+const getItemById = (id) => {
+  var query = `SELECT listed_price FROM item WHERE id = ${id}`;
+  return connection.queryAsync(query);
+}
+
+const addWholesalePrice = (id, wholesale_price) => {
+  var query = `UPDATE item SET wholesale_price = ${wholesale_price}, seller_id = 1 WHERE id = ${id}`;
+  return connection.queryAsync(query);
+}
+
+const fixWholesalePrice = (id) => {
+  return getItemById(id)
+    .then(result => {
+      let wholesale_price = Math.round((result[0].listed_price * (randomNumberGenerator(50, 99) / 100)) * 100) / 100;
+      return addWholesalePrice(id, wholesale_price)
+    })
+    .then(result => {
+      // console.log(result);
+    })
+    .catch(err => {
+      console.log("ERROR: ", err);
+    })
+}
+
+// fixWholesalePrice(1);
+
+const fixMultipleWholesalePrices = (numItems, currDBRow) => {
+  let id = currDBRow + 1;
+  while (id <= currDBRow + numItems) {
+    fixWholesalePrice(id);
+    id++
+  }
+}
+
+var numRowsToFix = 1000;
+var currRow = 1820383;
+var wholesalePriceTask = cron.schedule('0-56 * * * * *', function() {
+  console.log(`starting from row ${currRow}`);
+  fixMultipleWholesalePrices(numRowsToFix, currRow);
+  currRow += numRowsToFix
+})
+wholesalePriceTask.start();
+
+
+
 
 
 // var j = 1;

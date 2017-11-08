@@ -58,6 +58,7 @@ var createItem = (order_id) => {
     order_id: order_id,
     quantity: randomNumberGenerator(1, 4),
     listed_price: faker.commerce.price(.99, 200, 2),
+    seller_id: 1,
   }
   return item;
 }
@@ -197,6 +198,7 @@ var generateOrderRequest = (lastRowNum) => { //this can be done without http cal
       return generateItemArrayInventoryInfo(orderObj.order.items)
     })
     .then(items => {
+      // console.log('items in fakedatascript: ', items)
       return axios.post('http://127.0.0.1:3000/inventoryinfo', items) //it doesn't like something about this format
     })
     .then(res => {
@@ -303,8 +305,8 @@ var generateMultipleOrdersWithoutRequest = (numOrders, numRowsInOrderDB) => {
   }
 }
 
-var numOrders = 50;
-var numRowsInOrderDB = 20000000;
+var numOrders = 100;
+var numRowsInOrderDB = 21499889;
 var j = 1;
 var task = cron.schedule('0-55 * * * * *', function() {
   console.log(`ran task ${j++}`);
@@ -312,11 +314,10 @@ var task = cron.schedule('0-55 * * * * *', function() {
   numRowsInOrderDB+=numOrders
 })
 task.start();
-// console.log('fraud score', generateFraudScoreObj(12345))
-//26765
 
-// generateOrderRequest(1, 1);
-// generateMultipleOrders(1, 24758);
+
+// generateOrderRequest(21191453);
+// generateMultipleOrders(1, 21191452);
 // generateOrdersWithoutRequests(24760);
 // generateMultipleOrdersWithoutRequest(2000, 26765);
 

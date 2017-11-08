@@ -8,6 +8,8 @@ const Consumer = require('sqs-consumer');
 // const db = require('../database/index.js') //PRODUCTION DATABASE
 const db = require('../database/test.js') //TEST DATABASE
 const mb = require('../messagebus/index.js')
+const inv = require('../messagebus/queues/qtyCheckToInventory.js');
+const analytics = require('../messagebus/queues/fraudScoreCheckToAnalytics');
 
 const app = express()
 const PORT = process.env.PORT || 3000;
@@ -123,7 +125,48 @@ app.get('/qtyupdate/:order_id', (req, res) => {
   })
 })
 
-
+// app.post('/order', (req, res) => {
+//   var order_id = req.body.order.id;
+//   var total_price = req.body.order.total_price;
+//   var avg;
+//   var std_dev;
+//   return db.addNewOrder(req.body)
+//     .then(result => {
+//       return Promise.all(
+//         req.body.order.items.map(function (itemObj) { //THIS HAS BEEN CHANGED MAY AFFECT OTHER AREAS
+//           return db.addItem(itemObj); //ADDED RETURN HERE
+//         })
+//       )
+//       .then((result) => {
+//         return db.addPurchaseDate(req.body.order)
+//       })
+//       .then(result => {
+//         var year = req.body.order.purchased_at.slice(0, 4);
+//         var month = req.body.order.purchased_at.slice(5, 7);
+//         return db.getAOVandStdDev(year, month)
+//       })
+//       .then(AOVresult => {
+//         // console.log('aov result', AOVresult)
+//         avg = AOVresult[0].avg;
+//         std_dev = AOVresult[0].std_dev;
+//         return db.addStandardDev(order_id, total_price, avg, std_dev);
+//       })
+//       .then(result => {
+//         res.sendStatus(200);
+//       })
+//       .catch((error) => {
+//         console.log("ERROR in POST /order! ", error);
+//         res.sendStatus(500);
+//       })
+//     })
+//     .catch(error => {
+//       console.log('ERROR in POST /order!: ', error);
+//       res.sendStatus(500);
+//     })
+//     // .error(err => {
+//     //  console.log(err);
+//     // })
+// })
 app.post('/order', (req, res) => {
 	var order_id = req.body.order.id;
 	var total_price = req.body.order.total_price;
@@ -139,6 +182,9 @@ app.post('/order', (req, res) => {
 			.then((result) => {
 				return db.addPurchaseDate(req.body.order)
 			})
+      .then(result => {
+        res.sendStatus(200);
+      })
 			.then(result => {
 				var year = req.body.order.purchased_at.slice(0, 4);
 				var month = req.body.order.purchased_at.slice(5, 7);
@@ -150,9 +196,19 @@ app.post('/order', (req, res) => {
 				std_dev = AOVresult[0].std_dev;
 				return db.addStandardDev(order_id, total_price, avg, std_dev);
 			})
+
 			.then(result => {
-				res.sendStatus(200);
-			})
+        console.log("SUCCESSFULLY RECEIVED MESSAGE FROM USERS")
+        // done();
+        return analytics.createOrderObjToAnalytics(order_id)
+      })
+      .then(result => {
+        console.log("SUCCESSFULLY SENT MESSAGE TO ANALYTICS")
+        return inv.qtyCheckToInventory(order_id)
+      })
+      .then(result => {
+        console.log("SUCCESSFULLY SENT MESSAGE TO INVENTORY")
+      })
 			.catch((error) => {
 				console.log("ERROR in POST /order! ", error);
 				res.sendStatus(500);
@@ -176,10 +232,11 @@ app.post('/inventoryinfo', (req, res) => {
 		req.body.items.map(function(itemObj) {
 			order_id = itemObj.order_id;
 			wholesale_total += itemObj.wholesale_price;
-			db.addInventoryDataToItem(itemObj)
+			return db.addInventoryDataToItem(itemObj)
 		})
 	)
 	.then(result => {
+		// console.log("RESULT FROM ADDING INV DATA", result)
 		return db.addWholesaleTotal(order_id, wholesale_total)
 	})
 	.then(result => {

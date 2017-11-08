@@ -7,7 +7,7 @@ const db = require('../../database/test.js')  //TEST DATABASE
 const url = require('../config/config.js');
 const inv = require('./qtyCheckToInventory.js');
 
-AWS.config.loadFromPath(__dirname + '/../config/analytics/config.json');
+AWS.config.loadFromPath(__dirname + '/../config/config.json');
 AWS.config.setPromisesDependency(require('bluebird'));
 var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 
@@ -15,6 +15,7 @@ var createOrderObjToAnalytics = function(order_id) {
   let objToAnalytics = {}
   return db.constructObjToAnalytics(order_id)
     .then(result => {
+      // console.log("result from db", result)
       var firstItem = result[0];
       objToAnalytics.order = {
         order_id: firstItem.order_id,
@@ -45,7 +46,7 @@ var createOrderObjToAnalytics = function(order_id) {
       return sqs.sendMessage(qtyCheckParams).promise()
     })
     .then(data => {
-      console.log("Success", data.MessageId);
+      console.log("SUCCESS SENDING OBJ TO ANALYTICS", data.MessageId);
     })
     .catch(error => {
       // res.sendStatus(500);

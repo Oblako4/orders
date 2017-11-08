@@ -3,19 +3,16 @@ const cron = require('node-cron');
 const moment = require("moment");
 const Consumer = require('sqs-consumer');
 
-const db = require('../database/test.js')
-const url = require('../messagebus/config/config.js')
+// const db = require('../../database/index.js') //PRODUCTION DATABASE
+const db = require('../../database/test.js')  //TEST DATABASE
+const inv = require('./qtyUpdateToInventory.js');
+const url = require('../config/config.js');
 
-AWS.config.loadFromPath(__dirname + '/../messagebus/config/config.json');
+AWS.config.loadFromPath(__dirname + '/../config/config.json');
 AWS.config.setPromisesDependency(require('bluebird'));
 var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 
 const fraud_limit = 75;
-//check if wholesale_total = 0
-  //if yes, decline order
-  //if no, check if fraud score > fraud limit
-    //if yes, decline
-    //if no, confirm
 
 const declineOrder = (order_id) => {
   let now = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -73,15 +70,20 @@ const confirmOrDecline = Consumer.create({
         console.log("order_id: ", order_id);
         if (result[0].wholesale_total !== null && result[0].fraud_score !== null) {
           if (result[0].wholesale_total !== 0 && result[0].fraud_score < fraud_limit) {
-            console.log("CONFIRMING ORDER ID ${order_id}")
+            console.log(`CONFIRMING ORDER ID ${order_id}`)
             return confirmOrder(order_id)
+              .then(result => {
+                console.log("SENDING QTY UPDATE TO INVENTORY")
+                return inv.qtyUpdateToInventory(order_id)
+              })
           } else {
             console.log(`DECLINING ORDER ID ${order_id}`)
             return declineOrder(order_id)
           }
         } else {
           console.log(`ORDER ${order_id} NOT READY TO BE PROCESSED`)
-          return addOrderBackIntoQueue(order_id);
+          // return addOrderBackIntoQueue(order_id);
+          return order_id;
         }
       })
       .then(result => {
@@ -103,13 +105,13 @@ confirmOrDecline.on('error', (err) => {
 })
 
 // confirmOrDecline.start()
-
 // getOrdersNeedingProcessed();
 
-// var task = cron.schedule('* * * * *', function() {
-//   // console.log(`ran task ${j++}`);
-//   console.log('GATHERING ORDERS TO BE PROCESSED')
-//   getOrdersNeedingProcessed();
-// }, true);
-// task.start();
 
+var task = cron.schedule('* * * * *', function() {
+  // console.log(`ran task ${j++}`);
+  console.log('GATHERING ORDERS TO BE PROCESSED')
+  getOrdersNeedingProcessed();
+}, true);
+// task.start();
+task.stop();

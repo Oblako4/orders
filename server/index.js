@@ -162,6 +162,9 @@ app.post('/order', (req, res) => {
 			console.log('ERROR in POST /order!: ', error);
 			res.sendStatus(500);
 		})
+		// .error(err => {
+		// 	console.log(err);
+		// })
 })
 
 app.post('/inventoryinfo', (req, res) => {

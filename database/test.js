@@ -92,6 +92,17 @@ const addItem = (itemObj) => {
   return connection.queryAsync(itemQuery, itemValues);
 }
 
+const addAllItems = (itemArray) => {
+  var allItemValues = [];
+  itemArray.forEach(function(itemObj) {
+    var itemValues = [itemObj.order_id, itemObj.id, itemObj.quantity, itemObj.listed_price, itemObj.seller_id];
+    allItemValues.push(itemValues);
+  })
+
+  var allItemQuery = `INSERT INTO item (order_id, item_id, quantity, listed_price, seller_id) VALUES (?)`;
+  return connection.queryAsync(allItemQuery, allItemValues);
+}
+
 const getItems = (order_id) => {
   var itemQuery = `SELECT * FROM item WHERE order_id = ${order_id}`;
   return connection.queryAsync(itemQuery);
@@ -235,6 +246,7 @@ module.exports = {
   getOrdersToBeProcessed,
   getWholesaleAndFraud,
   addNewOrderPlusStdDev,
+  addAllItems,
 }
 
 

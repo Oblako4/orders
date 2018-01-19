@@ -1,35 +1,22 @@
-# Project Name
+# Oblako Analytics - eCommerce Fraud Detection
 
-The project description
+This is the "Orders" microservice for eCommerce clone Oblako Analytics. An in-depth description of the full system can be found here: https://docs.google.com/document/d/1F5gqUwwT7v-rDM2xBL9jbakSkcOj33VtvwJankXhbHY/edit?usp=sharing
 
-## Roadmap
+The purpose of this microservice is to process all orders received from Users by (1) determining whether Inventory can fulfill the quantity purchased and (2) ensuring the fraud score provided by Analytics is below threshold.
 
-View the project roadmap [here](LINK_TO_DOC)
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
-
-# Table of Contents
-
-1. [Usage](#Usage)
-1. [Requirements](#requirements)
-1. [Development](#development)
-    1. [Installing Dependencies](#installing-dependencies)
-    1. [Tasks](#tasks)
 
 ## Usage
 
-> Some usage instructions
+- On the command line, perform the following from the project’s root directory:
+    - “mysql.server start” (starts mysql server)
+    - “mysql -u root < schema.sql” (creates database “orders_API” under user “root” with no password)
+    - “npm install” (installs node module dependencies)
+    - “npm start” (starts server at localhost:3000)
+- In the browser, navigate to “localhost:3000”
 
 ## Requirements
 
-- Node 6.9.x
-- Redis 3.2.x
-- Postgresql 9.6.x
-- etc
+- MySQL v5.7 
+- Node (v6.4.0 or later)
 
-## Other Information
-
-(TODO: fill this out with details about your project. Suggested ideas: architecture diagram, schema, and any other details from your app plan that sound interesting.)
 

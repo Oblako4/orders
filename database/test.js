@@ -55,11 +55,52 @@ const addNewOrder = (orderObj) => {
   return connection.queryAsync(userOrderQuery, orderValues);
 }
 
+const addNewOrderPlusStdDev = (orderObj, avg, std_dev) => {
+  var order_id = orderObj.order.id;
+  var user_id = orderObj.order.user_id;
+  var billing_name = orderObj.order.billing_address.name;
+  var billing_street = orderObj.order.billing_address.street;
+  var billing_city = orderObj.order.billing_address.city;
+  var billing_state = orderObj.order.billing_address.state;
+  var billing_ZIP = orderObj.order.billing_address.zip;
+  var billing_country = orderObj.order.billing_address.country;
+  var shipping_name = orderObj.order.shipping_address.name;
+  var shipping_street = orderObj.order.shipping_address.street;
+  var shipping_city = orderObj.order.shipping_address.city;
+  var shipping_state = orderObj.order.shipping_address.state;
+  var shipping_ZIP = orderObj.order.shipping_address.zip;
+  var shipping_country = orderObj.order.shipping_address.country;
+  var total_price = orderObj.order.total_price;
+  var card_num = orderObj.order.card.num;
+  var purchased_at = orderObj.order.purchased_at;
+  
+  var delta = Math.floor(total_price - avg);
+  var std_dev_from_AOV = Math.round((delta * 100000)/ (std_dev * 100000) * 100000) / 100000; 
+
+  var orderValues = [order_id, user_id, billing_name, billing_street, billing_city, billing_state, billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, total_price, card_num, std_dev_from_AOV];
+  var userOrderQuery = `INSERT INTO user_order (order_id, user_id, billing_name, billing_street, billing_city, billing_state, 
+  billing_ZIP, billing_country, shipping_name, shipping_street, shipping_city, shipping_state, shipping_ZIP, shipping_country, 
+  total_price, card_num, std_dev_from_aov) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  return connection.queryAsync(userOrderQuery, orderValues);
+}
+
 const addItem = (itemObj) => {
   var itemValues = [itemObj.order_id, itemObj.id, itemObj.quantity, itemObj.listed_price, itemObj.seller_id];
   // var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price) VALUES (?, ?, ?, ?)';
   var itemQuery = 'INSERT INTO item (order_id, item_id, quantity, listed_price, seller_id) VALUES (?, ?, ?, ?, ?)';
   return connection.queryAsync(itemQuery, itemValues);
+}
+
+const addAllItems = (itemArray) => {
+  var allItemValues = [];
+  itemArray.forEach(function(itemObj) {
+    var itemValues = [itemObj.order_id, itemObj.id, itemObj.quantity, itemObj.listed_price, itemObj.seller_id];
+    allItemValues.push(itemValues);
+  })
+
+  var allItemQuery = `INSERT INTO item (order_id, item_id, quantity, listed_price, seller_id) VALUES (?)`;
+  return connection.queryAsync(allItemQuery, allItemValues);
 }
 
 const getItems = (order_id) => {
@@ -204,6 +245,8 @@ module.exports = {
   getWholesaleTotal,
   getOrdersToBeProcessed,
   getWholesaleAndFraud,
+  addNewOrderPlusStdDev,
+  addAllItems,
 }
 
 

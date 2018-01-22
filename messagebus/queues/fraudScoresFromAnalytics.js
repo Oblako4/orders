@@ -25,59 +25,53 @@ const confirmOrder = (order_id) => {
   return db.updateOrderHistory("confirmed_at", now, order_id)
 }
 
-const fraudscores = Consumer.create({
-  queueUrl: url.fraudscores,
-  handleMessage: (message, done) => {
-    console.log('message: ', message)
-    let fraudMessage = JSON.parse(message.Body)
-    return db.addFraudScore(fraudMessage)
-      .then(result => {
-        console.log("SUCCESSFULLY RECEIVED MESSAGE FROM ANALYTICS")
-        done();
-      })
-      .catch(err => {
-        console.log("ERROR: ", err);
-      })
-    // done();
-  },
-  sqs: sqs
-})
+var params = {
+  QueueUrl: url.fraudscores,
+};
 
+const pollQueue = () => {
+  let ReceiptHandle;
+  return sqs.receiveMessage(params).promise()
+  .then(data => {
+    if (data.Messages) {
+      console.log(data)
+      ReceiptHandle = data.Messages[0].ReceiptHandle;
+      var parsedScore = JSON.parse(data.Messages[0].Body);
+      console.log(parsedScore)
+      return db.addFraudScore(parsedScore)
+    } else {
+      return false;
+    }
+  })
+  .then(data => {
+    if (data) {
+      console.log("SUCCESSFULLY RECEIVED MESSAGE FROM ANALYTICS")
+      var deleteParams = {
+        QueueUrl: url.fraudscores,
+        ReceiptHandle: ReceiptHandle
+      }
+      return sqs.deleteMessage(deleteParams).promise()
+    } else {
+      return false;
+    }
+  })
+  .then(result => {
+    if (result) {
+      console.log('analytics message erased', result);
+    }
+  })
+  .catch(err => {
+    console.log(err, err.stack);
+  })
+}
+
+setInterval(pollQueue, 50);
 // const fraudscores = Consumer.create({
 //   queueUrl: url.fraudscores,
 //   handleMessage: (message, done) => {
 //     console.log('message: ', message)
 //     let fraudMessage = JSON.parse(message.Body)
-    
-//     let order_id = fraudMessage.order.order_id;
-//     let fraud_score = fraudMessage.order.fraud_score;
-
-//     return db.getDeclinedDate(order_id)
-//       .then(result => {
-//         if (result[0].declined_at === null) {
-//           if (fraud_score >= fraud_limit) {
-//             console.log("DECLINED ORDER, FRAUD SCORE TOO HIGH")
-//             return declineOrder(order_id)
-//           } else {
-//             return db.getWholesaleTotal(order_id)
-//               .then(result => {
-//                 if (result[0].wholesale_total !== null) {
-//                   console.log("CONFIRMED ORDER")
-//                   return confirmOrder(order_id)
-//                 } else {
-//                   console.log("STILL WAITING FOR INVENTORY")
-//                   return result;
-//                 }
-//               })
-//           }
-//         } else {
-//           console.log("ORDER ALREADY DECLINED")
-//           return result[0];
-//         }
-//       })
-//       .then(result => {
-//         return db.addFraudScore(fraudMessage)
-//       })
+//     return db.addFraudScore(fraudMessage)
 //       .then(result => {
 //         console.log("SUCCESSFULLY RECEIVED MESSAGE FROM ANALYTICS")
 //         done();
@@ -91,9 +85,9 @@ const fraudscores = Consumer.create({
 // })
 
 
-fraudscores.on('error', (err) => {
-	console.log(err.message);
-	done(err); //can i keep this here?
-})
+// fraudscores.on('error', (err) => {
+// 	console.log(err.message);
+// 	done(err); //can i keep this here?
+// })
 
-fraudscores.start()
+// fraudscores.start()

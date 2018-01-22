@@ -8,6 +8,8 @@ const Consumer = require('sqs-consumer');
 // const db = require('../database/index.js') //PRODUCTION DATABASE
 const db = require('../database/test.js') //TEST DATABASE
 const mb = require('../messagebus/index.js')
+const inv = require('../messagebus/queues/qtyCheckToInventory.js');
+const analytics = require('../messagebus/queues/fraudScoreCheckToAnalytics');
 
 const app = express()
 const PORT = process.env.PORT || 3000;
@@ -27,145 +29,156 @@ app.listen(PORT, () => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.get('/order', (req, res) => {
-	if (req.query.gte && req.query.lte) { //add more validation for date format?
-		return db.getOrdersBetweenDates(req.query.gte, req.query.lte).
-			then(results => {
-				res.send(results);
-			})
-			.catch(err => {
-				console.log('ERROR in GET /order', err);
-				res.sendStatus(500);
-			})
-	} else {
-		res.sendStatus(500);
-	}
-})
 
+/*================================================================
+ORDERS ENDPOINT USED FOR TESTING (NO MESSAGE BUS)
+================================================================*/
+// app.post('/order', (req, res) => {
+//   var order_id = req.body.order.id;
+//   var total_price = req.body.order.total_price;
+//   var avg;
+//   var std_dev;
+//   return db.addNewOrder(req.body)
+//     .then(result => {
+//       return Promise.all(
+//         req.body.order.items.map(function (itemObj) { //THIS HAS BEEN CHANGED MAY AFFECT OTHER AREAS
+//           return db.addItem(itemObj); //ADDED RETURN HERE
+//         })
+//       )
+//       .then((result) => {
+//         return db.addPurchaseDate(req.body.order)
+//       })
+//       .then(result => {
+//         var year = req.body.order.purchased_at.slice(0, 4);
+//         var month = req.body.order.purchased_at.slice(5, 7);
+//         return db.getAOVandStdDev(year, month)
+//       })
+//       .then(AOVresult => {
+//         // console.log('aov result', AOVresult)
+//         avg = AOVresult[0].avg;
+//         std_dev = AOVresult[0].std_dev;
+//         return db.addStandardDev(order_id, total_price, avg, std_dev);
+//       })
+//       .then(result => {
+//         res.sendStatus(200);
+//       })
+//       .catch((error) => {
+//         console.log("ERROR in POST /order! ", error);
+//         res.sendStatus(500);
+//       })
+//     })
+//     .catch(error => {
+//       console.log('ERROR in POST /order!: ', error);
+//       res.sendStatus(500);
+//     })
+//     // .error(err => {
+//     //  console.log(err);
+//     // })
+// })
 
+/*================================================================
+ORDERS ENDPOINT USED FOR HTTP REQUESTS FROM USERS (/W MESSAGE BUS)
+================================================================*/
+// app.post('/order', (req, res) => {
+// 	var order_id = req.body.order.id;
+// 	var total_price = req.body.order.total_price;
+// 	var avg;
+// 	var std_dev;
+// 	return db.addNewOrder(req.body)
+// 		.then(result => {
+// 			return Promise.all(
+// 				req.body.order.items.map(function (itemObj) { //THIS HAS BEEN CHANGED MAY AFFECT OTHER AREAS
+// 					return db.addItem(itemObj); //ADDED RETURN HERE
+// 				})
+// 			)
+// 			.then((result) => {
+// 				return db.addPurchaseDate(req.body.order)
+// 			})
 
-app.get('/orderinfo/:order_id', (req, res) => {
-	//construct outbound object
-  let objToAnalytics = {}
-  console.log('params ', req.params)
-	return db.constructObjToAnalytics(req.params.order_id)
-	.then(result => {
-    // console.log('result: ', result);
-    
-    var firstItem = result[0];
-    objToAnalytics.order = {
-      order_id: firstItem.order_id,
-      user_id: firstItem.user_id,
-      billing_state: firstItem.billing_state,
-      billing_ZIP: firstItem.billing_ZIP,
-      billing_country: firstItem.billing_country,
-      shipping_state: firstItem.shipping_state,
-      shipping_ZIP: firstItem.shipping_ZIP,
-      shipping_country: firstItem.shipping_country,
-      total_price: firstItem.total_price,
-      purchased_At: firstItem.purchased_At,
-      std_dev_from_aov: firstItem. std_dev_from_aov,
-    }
-    objToAnalytics.items = [];
-    result.forEach(function(item) {
-      var itemObj = {
-        item_id: item.item_id,
-        quantity: item.quantity,
-        seller_id: item.seller_id,
-      }
-      objToAnalytics.items.push(itemObj)
-    })
-    res.send(objToAnalytics);
-  })
-  .catch(error => {
-    res.sendStatus(500);
-  })
-})
+// 			.then(result => {
+// 				var year = req.body.order.purchased_at.slice(0, 4);
+// 				var month = req.body.order.purchased_at.slice(5, 7);
+// 				return db.getAOVandStdDev(year, month)
+// 			})
+// 			.then(AOVresult => {
+// 				// console.log('aov result', AOVresult)
+// 				avg = AOVresult[0].avg;
+// 				std_dev = AOVresult[0].std_dev;
+// 				return db.addStandardDev(order_id, total_price, avg, std_dev);
+// 			})
+//       .then(result => {
+//         res.sendStatus(200);
+//       })
+// 			.then(result => {
+//         console.log("SUCCESSFULLY RECEIVED MESSAGE FROM USERS")
+//         // done();
+//         return analytics.createOrderObjToAnalytics(order_id)
+//       })
+//       .then(result => {
+//         console.log("SUCCESSFULLY SENT MESSAGE TO ANALYTICS")
+//         return inv.qtyCheckToInventory(order_id)
+//       })
+//       .then(result => {
+//         console.log("SUCCESSFULLY SENT MESSAGE TO INVENTORY")
+//       })
+// 			.catch((error) => {
+// 				console.log("ERROR in POST /order! ", error);
+// 				res.sendStatus(500);
+// 			})
+// 		})
+// 		.catch(error => {
+// 			console.log('ERROR in POST /order!: ', error);
+// 			res.sendStatus(500);
+// 		})
+// })
 
-
-app.get('/qtycheck/:order_id', (req, res) => {
-  let qtyCheckObj = {}
-  qtyCheckObj.order_id = req.params.order_id
-  return db.constObjToInventory(req.params.order_id)
-  .then(result => {
-    qtyCheckObj.items = []
-    result.forEach(function(item) {
-      var itemObj = {
-        item_id: item.item_id,
-        seller_id: item.seller_id
-      }
-      qtyCheckObj.items.push(itemObj)
-    })
-    res.send(qtyCheckObj);
-  })
-  .catch(error => {
-    res.sendStatus(500);
-  })
-})
-
-app.get('/qtyupdate/:order_id', (req, res) => {
-  let qtyUpdateObj = {};
-  return db.constObjToInventory(req.params.order_id)
-  .then(result => {
-    qtyUpdateObj.items = []
-    result.forEach(function(item) {
-      var itemObj = {
-        item_id: item.item_id,
-        quantity: item.quantity,
-        seller_id: item.seller_id
-      }
-      qtyUpdateObj.items.push(itemObj);
-    })
-    res.send(qtyUpdateObj);
-  })
-  .catch(error => {
-    res.sendStatus(500);
-  })
-})
-
-
+/*================================================================
+OPTIMIZED ORDERS ENDPOINT USED FOR HTTP REQUESTS FROM USERS (/W MESSAGE BUS)
+================================================================*/
 app.post('/order', (req, res) => {
-	var order_id = req.body.order.id;
-	var total_price = req.body.order.total_price;
-	var avg;
-	var std_dev;
-	return db.addNewOrder(req.body)
-		.then(result => {
-			return Promise.all(
-				req.body.order.items.map(function (itemObj) { //THIS HAS BEEN CHANGED MAY AFFECT OTHER AREAS
-					return db.addItem(itemObj); //ADDED RETURN HERE
-				})
-			)
-			.then((result) => {
-				return db.addPurchaseDate(req.body.order)
-			})
-			.then(result => {
-				var year = req.body.order.purchased_at.slice(0, 4);
-				var month = req.body.order.purchased_at.slice(5, 7);
-				return db.getAOVandStdDev(year, month)
-			})
-			.then(AOVresult => {
-				// console.log('aov result', AOVresult)
-				avg = AOVresult[0].avg;
-				std_dev = AOVresult[0].std_dev;
-				return db.addStandardDev(order_id, total_price, avg, std_dev);
-			})
-			.then(result => {
-				res.sendStatus(200);
-			})
-			.catch((error) => {
-				console.log("ERROR in POST /order! ", error);
-				res.sendStatus(500);
-			})
-		})
-		.catch(error => {
-			console.log('ERROR in POST /order!: ', error);
-			res.sendStatus(500);
-		})
-		// .error(err => {
-		// 	console.log(err);
-		// })
+  var order_id = req.body.order.id;
+  var total_price = req.body.order.total_price;
+  var avg;
+  var std_dev;
+  var year = req.body.order.purchased_at.slice(0, 4);
+  var month = req.body.order.purchased_at.slice(5, 7);
+
+  return db.getAOVandStdDev(year, month)
+    .then(AOVresult => {
+      // console.log('aov result', AOVresult)
+      avg = AOVresult[0].avg;
+      std_dev = AOVresult[0].std_dev;
+      return db.addNewOrderPlusStdDev(req.body, avg, std_dev)
+    })
+    .then(result => {
+      return db.addAllItems(req.body.order.items);
+    })
+    .then(result => {
+      return db.addPurchaseDate(req.body.order)
+    })
+    .then(result => {
+      res.sendStatus(200);
+    })
+    .then(result => {
+      console.log("SUCCESSFULLY RECEIVED MESSAGE FROM USERS")
+      // done();
+      return analytics.createOrderObjToAnalytics(order_id)
+    })
+    .then(result => {
+      
+      console.log("SUCCESSFULLY SENT MESSAGE TO ANALYTICS")
+      return inv.qtyCheckToInventory(order_id)
+    })
+    .then(result => {
+      console.log("SUCCESSFULLY SENT MESSAGE TO INVENTORY")
+    })
+    .catch(error => {
+      console.log('ERROR in POST /order!: ', error);
+      res.sendStatus(500);
+    })
 })
+
+
 
 app.post('/inventoryinfo', (req, res) => {
 	//check if quantity is sufficient, else decline
@@ -176,10 +189,11 @@ app.post('/inventoryinfo', (req, res) => {
 		req.body.items.map(function(itemObj) {
 			order_id = itemObj.order_id;
 			wholesale_total += itemObj.wholesale_price;
-			db.addInventoryDataToItem(itemObj)
+			return db.addInventoryDataToItem(itemObj)
 		})
 	)
 	.then(result => {
+		// console.log("RESULT FROM ADDING INV DATA", result)
 		return db.addWholesaleTotal(order_id, wholesale_total)
 	})
 	.then(result => {

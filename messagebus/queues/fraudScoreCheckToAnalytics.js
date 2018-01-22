@@ -28,7 +28,7 @@ var createOrderObjToAnalytics = function(order_id) {
         shipping_country: firstItem.shipping_country,
         total_price: firstItem.total_price,
         purchased_At: firstItem.purchased_At,
-        std_dev_from_aov: firstItem. std_dev_from_aov,
+        std_dev_from_aov: firstItem.std_dev_from_aov,
       }
       objToAnalytics.items = [];
       result.forEach(function(item) {

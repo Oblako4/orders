@@ -11,7 +11,11 @@ The purpose of this microservice is to process all orders received from Users by
     - “mysql.server start” (starts mysql server)
     - “mysql -u root < schema.sql” (creates database “orders_API” under user “root” with no password)
     - “npm install” (installs node module dependencies)
+    - In the "orders/messagebus/config" directory, replace all "config-example.json" and "config-example.js" files with config.json and config.js files. Ensure that all Amazon SQS keys and urls have been entered.
     - “npm start” (starts server at localhost:3000)
+
+
+Note: The Inventory, User Activity, and Analytics microservices (found at https://github.com/Oblako4) must also be installed to run this microservice.
 
 ## Requirements
 

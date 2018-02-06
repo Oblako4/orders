@@ -12,7 +12,6 @@ The purpose of this microservice is to process all orders received from Users by
     - “mysql -u root < schema.sql” (creates database “orders_API” under user “root” with no password)
     - “npm install” (installs node module dependencies)
     - “npm start” (starts server at localhost:3000)
-- In the browser, navigate to “localhost:3000”
 
 ## Requirements
 
